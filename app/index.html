@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fluxo - demonstração</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0A1F4D;--navy2:#1A3470;--mid:#123A7E;--blue:#2456E6;--bg:#F3F5FA;--card:#fff;--line:#DDE3EF;--line2:#C5CEE0;--muted:#55627F;--tint:#E6ECFB;--ok:#0F6B43;--bad:#A32020}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:Inter,system-ui,sans-serif;color:var(--navy);background:#DCE2EE}
+button,input{font-family:inherit}
+button{cursor:pointer}
+h1,h2,.sora{font-family:Sora,sans-serif}
+#app{max-width:430px;min-height:100%;margin:0 auto;background:var(--bg);display:flex;flex-direction:column;position:relative}
+.demo{background:#FFE9B8;color:#4A3500;font-size:12px;font-weight:600;text-align:center;padding:6px 10px}
+.top{background:var(--navy);color:#fff;border-radius:0 0 28px 28px;padding:22px 20px;display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center}
+.between{justify-content:space-between}
+.brand{font-family:Sora,sans-serif;font-weight:800;font-size:24px;letter-spacing:1px}
+.pill{height:44px;padding:0 16px;border-radius:22px;border:0;background:#fff;color:var(--navy);font-weight:600;font-size:14px;display:flex;align-items:center;gap:8px}
+.pill.ghost{background:var(--navy2);color:#fff}
+.round{width:44px;height:44px;border-radius:22px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--navy)}
+.round.dark{background:var(--navy2);border:0;color:#fff}
+.round.solid{background:var(--navy);border:0;color:#fff}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;color:var(--muted)}
+.top .eyebrow{color:#C9D6F5}
+.search{display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border-radius:14px;background:var(--navy2)}
+.search input{flex:1;min-width:0;height:44px;border:0;background:transparent;color:#fff;font-size:15px;outline:none}
+.search input::placeholder{color:#C9D6F5}
+.chips{display:flex;gap:8px;padding:16px 20px 4px;overflow-x:auto}
+.chip{height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--line2);background:#fff;color:var(--navy);font-weight:600;font-size:14px;white-space:nowrap}
+.chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.body{padding:14px 20px 20px;display:flex;flex-direction:column;gap:12px;flex:1}
+.prod{display:flex;align-items:center;gap:14px;padding:12px;border-radius:18px;background:#fff;border:1px solid var(--line);width:100%;text-align:left;color:inherit}
+.tile{width:60px;height:60px;border-radius:14px;background:var(--tint);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--mid)}
+.grow{flex:1;min-width:0}
+.name{font-weight:600;font-size:15px}
+.sub{font-size:13px;color:var(--muted);line-height:1.45}
+.price{font-family:Sora,sans-serif;font-weight:700;font-size:15px;color:var(--blue)}
+.cta{height:60px;border-radius:20px;border:0;background:var(--blue);color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;width:100%}
+.cta.center{justify-content:center}
+.cta.navy{background:var(--navy)}
+.cta.line{background:transparent;border:2px solid var(--navy);color:var(--navy)}
+.cta:disabled{background:#8A93A8;cursor:not-allowed}
+.foot{position:sticky;bottom:0;padding:12px 16px 18px;background:linear-gradient(to top,var(--bg) 75%,transparent)}
+.box{border-radius:18px;background:#fff;border:1px solid var(--line);padding:16px}
+.hr{height:1px;background:var(--line);margin:10px 0}
+.note{display:flex;gap:12px;padding:14px 16px;border-radius:16px;background:var(--tint);font-size:13px;line-height:1.45;color:#40507A}
+.note b{display:block;color:var(--navy);font-size:14px}
+.head{padding:22px 20px 4px;display:flex;align-items:center;gap:12px}
+.head h1{margin:0;font-size:22px}
+.hero{background:var(--tint);height:260px;border-radius:0 0 28px 28px;padding:22px 20px;display:flex;flex-direction:column;color:var(--mid)}
+.step{width:44px;height:44px;border-radius:22px;border:1px solid var(--line2);background:#fff;font-size:22px;font-weight:700;color:var(--navy)}
+.step.add{background:var(--navy);color:#fff;border:0}
+.pay{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;background:#fff;border:2px solid var(--line);min-height:44px}
+.pay.on{border-color:var(--blue)}
+.pay input{width:22px;height:22px;accent-color:var(--blue)}
+.seg{display:flex;gap:6px;padding:4px;border-radius:16px;background:var(--navy2)}
+.seg button{flex:1;height:44px;border-radius:12px;border:0;background:transparent;color:#fff;font-weight:600;font-size:14px}
+.seg button.on{background:#fff;color:var(--navy);font-weight:700}
+.ticket{display:flex;align-items:stretch;border-radius:18px;background:#fff;border:1px solid var(--line);overflow:hidden;min-height:92px;width:100%;padding:0;text-align:left;color:inherit}
+.stub{width:72px;background:var(--mid);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff}
+.stub.used{background:#6B7690}
+.dash{border-left:2px dashed var(--line2)}
+.okc{color:var(--ok);font-weight:700;font-size:13px}
+.usedc{color:var(--muted);font-weight:700;font-size:13px}
+.dark{background:var(--navy);color:#fff}
+.dark .sub{color:#C9D6F5}
+.qr{background:#fff;border-radius:26px;color:var(--navy);display:flex;flex-direction:column;align-items:center;padding:22px;gap:14px}
+.code{font-family:Sora,sans-serif;font-weight:700;font-size:18px;letter-spacing:2px}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;width:100%}
+.bar i{display:block;height:6px;background:var(--blue);border-radius:3px}
+.field{height:56px;border-radius:14px;border:2px solid var(--line2);padding:0 14px;font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase;width:100%;color:var(--navy);background:#fff}
+.result{border-radius:22px;padding:24px 20px;color:#fff;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.result.ok{background:var(--ok)}.result.bad{background:var(--bad)}
+.result h2{margin:0;font-size:26px}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 10px}
+.spin{width:22px;height:22px;border:3px solid var(--line2);border-top-color:var(--mid);border-radius:50%;animation:s 1s linear infinite;flex-shrink:0}
+.login{flex:1;background:#FEFEFE;display:flex;flex-direction:column;padding:8px 24px 28px;gap:18px}
+.login img{width:230px;max-width:70%;height:auto;align-self:center;display:block}
+.login h1{margin:0;font-size:22px;text-align:center}
+.login form{display:flex;flex-direction:column;gap:14px}
+.lbl{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:14px}
+.inp{height:54px;border-radius:14px;border:2px solid var(--line2);padding:0 14px;font-size:16px;color:var(--navy);background:#fff;width:100%}
+.inp:focus{outline:none;border-color:var(--blue)}
+.err{background:#FBE9E9;color:#8A1C1C;border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600}
+.linkbtn{background:none;border:0;color:var(--blue);font-weight:700;font-size:15px;min-height:44px;padding:0 6px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+var IC={
+bottle:'<path d="M10 2h4v4l2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10l2-4z"/><path d="M8 13h8"/>',
+bucket:'<path d="M4 10h16l-2 11H6z"/><path d="M8 10V4h3v6M13 10V6h3v4"/>',
+drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.500 6-11 6-11z"/>',
+can:'<rect x="7" y="4" width="10" height="17" rx="2"/><path d="M7 8h10M7 17h10"/>',
+bolt:'<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+food:'<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-2 2-2 2-4M13 7c0-2 2-2 2-4"/>',
+back:'<path d="M15 6l-6 6 6 6"/>',next:'<path d="M9 6l6 6-6 6"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',check:'<path d="M5 12l5 5 9-10"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ticket:'<path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6z"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.500-3.500"/>',
+scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/>',
+trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
+};
+function ic(n,s,w){return '<svg aria-hidden="true" width="'+(s||20)+'" height="'+(s||20)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round">'+IC[n]+'</svg>';}
+
+var EVENTO='Evento de demonstração';
+var PRODS=[
+{id:'p1',nome:'Cerveja long neck',desc:'330 ml, gelada',preco:15,cat:'Bebidas',icon:'bottle'},
+{id:'p2',nome:'Balde com 6 long necks',desc:'Combo para a galera',preco:80,cat:'Combos',icon:'bucket'},
+{id:'p3',nome:'Água com gás',desc:'500 ml',preco:6,cat:'Bebidas',icon:'drop'},
+{id:'p4',nome:'Refrigerante lata',desc:'350 ml',preco:8,cat:'Bebidas',icon:'can'},
+{id:'p5',nome:'Energético',desc:'Lata 250 ml',preco:18,cat:'Bebidas',icon:'bolt'},
+{id:'p6',nome:'Porção de batata',desc:'Serve 2 pessoas',preco:30,cat:'Comidas',icon:'food'}
+];
+var CATS=['Todos','Bebidas','Combos','Comidas'];
+
+var KEY='fluxo-demo-v1';
+var S={view:'menu',cat:'Todos',busca:'',item:null,qtd:1,pag:'pix',cart:{},fichas:[],aba:'disp',ficha:null,leitura:null,codigo:''};
+S.user=null;S.auth='entrar';S.erro='';
+try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){S.cart=sv.cart||{};S.fichas=sv.fichas||[];S.user=sv.user||null;}}catch(e){}
+if(!S.user)S.view='login';
+function save(){try{localStorage.setItem(KEY,JSON.stringify({cart:S.cart,fichas:S.fichas,user:S.user}));}catch(e){}}
+function maskCpf(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1-$2');}
+function maskCel(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');}
+function vLogin(){
+var criar=S.auth==='criar';
+var h='<div class="login"><img src="logo.png" alt="Fluxo. Seu bar. Sem filas."><h1>'+(criar?'Crie sua conta':'Entre para pedir sem fila')+'</h1>';
+if(S.erro)h+='<div class="err" role="alert">'+esc(S.erro)+'</div>';
+h+='<form id="authform" novalidate>';
+if(criar)h+='<label class="lbl">Nome<input class="inp" id="f-nome" type="text" autocomplete="name" placeholder="Como quer ser chamado"></label>';
+h+='<label class="lbl">CPF<input class="inp" id="f-cpf" type="text" inputmode="numeric" autocomplete="username" placeholder="000.000.000-00"></label>';
+if(criar)h+='<label class="lbl">Celular<input class="inp" id="f-cel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000"></label>';
+h+='<label class="lbl">Senha<input class="inp" id="f-senha" type="password" autocomplete="'+(criar?'new-password':'current-password')+'" placeholder="'+(criar?'Mínimo de 6 caracteres':'Sua senha')+'"></label>';
+h+='<button class="cta center navy" type="submit">'+(criar?'Criar conta':'Entrar')+'</button></form>';
+h+='<div style="text-align:center;font-size:15px;color:var(--muted)">'+(criar?'Já tem conta?':'Ainda não tem conta?')+' <button class="linkbtn" data-a="auth" data-v="'+(criar?'entrar':'criar')+'">'+(criar?'Entrar':'Criar conta')+'</button></div>';
+h+='<div class="sub" style="text-align:center;margin-top:auto">Nesta demonstração o login é simulado: qualquer CPF com 11 números e senha de 6 caracteres entra. CPF e senha não são guardados.</div></div>';
+return h;
+}
+function cyrb(s){var h1=0xdeadbeef,h2=0x41c6ce57;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);}
+function autenticar(){
+var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
+var criar=S.auth==='criar',cpf=g('f-cpf').replace(/\D/g,''),senha=g('f-senha'),nome=g('f-nome');
+if(criar&&nome.length<2){S.erro='Digite seu nome.';return render();}
+if(cpf.length!==11){S.erro='Digite um CPF com 11 números.';return render();}
+if(criar&&g('f-cel').replace(/\D/g,'').length<10){S.erro='Digite um celular com DDD.';return render();}
+if(senha.length<6){S.erro='A senha precisa ter pelo menos 6 caracteres.';return render();}
+var adm=false;
+if(cpf==='11111111111'){
+if(criar){S.erro='Este CPF já tem conta. Toque em Entrar.';return render();}
+if(cyrb(cpf+':'+senha)!==118782819781992){S.erro='Senha incorreta.';return render();}
+adm=true;}
+S.erro='';S.user=adm?{nome:'Sid',admin:true}:{nome:criar?nome.split(' ')[0]:'cliente'};save();go('menu');
+}
+
+function brl(v){return 'R$ '+v.toFixed(2).replace('.',',');}
+function prod(id){for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return null;}
+function cartCount(){var n=0;for(var k in S.cart)n+=S.cart[k];return n;}
+function cartTotal(){var t=0;for(var k in S.cart)t+=S.cart[k]*prod(k).preco;return t;}
+function novoCodigo(){var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<8;i++){s+=a[Math.floor(Math.random()*a.length)];}return 'FLX-'+s.slice(0,4)+'-'+s.slice(4);}
+function esc(t){return String(t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+function qrSvg(seedText){
+var h=2166136261;for(var i=0;i<seedText.length;i++){h^=seedText.charCodeAt(i);h=Math.imul(h,16777619);}
+function rnd(){h^=h<<13;h^=h>>>17;h^=h<<5;return (h>>>0)/4294967296;}
+var N=21,r='';
+function finder(x,y){return x>=0&&x<7&&y>=0&&y<7;}
+function inF(x,y){return finder(x,y)||finder(x-14,y)||finder(x,y-14);}
+function fOn(x,y){var fx=x>=14?x-14:x,fy=y>=14?y-14:y;var edge=fx===0||fx===6||fy===0||fy===6;var core=fx>=2&&fx<=4&&fy>=2&&fy<=4;return edge||core;}
+for(var y=0;y<N;y++)for(var x=0;x<N;x++){
+var on;if(inF(x,y))on=fOn(x,y);else if((x===7&&y<8)||(y===7&&x<8)||(x===13&&y<8)||(y===7&&x>12)||(y===13&&x<8)||(x===7&&y>12))on=false;else on=rnd()>0.52;
+if(on)r+='<rect x="'+x+'" y="'+y+'" width="1" height="1"/>';}
+return '<svg role="img" aria-label="QR ilustrativo da ficha" width="220" height="220" viewBox="0 0 21 21" fill="#0A1F4D" shape-rendering="crispEdges">'+r+'</svg>';
+}
+
+var app=document.getElementById('app');
+var timer=null;
+function go(v,extra){if(timer){clearInterval(timer);timer=null;}S.view=v;if(extra)for(var k in extra)S[k]=extra[k];render();window.scrollTo(0,0);}
+
+function vMenu(){
+var q=S.busca.trim().toLowerCase();
+var list=PRODS.filter(function(p){return (S.cat==='Todos'||p.cat===S.cat)&&(!q||p.nome.toLowerCase().indexOf(q)>=0);});
+var disp=S.fichas.filter(function(f){return !f.usada;}).length;
+var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button></div>'
++'<div><div class="eyebrow">Olá, '+esc(S.user?S.user.nome:'cliente')+(S.user&&S.user.admin?' <span style="background:#fff;color:#0A1F4D;border-radius:8px;padding:2px 8px;margin-left:4px">Admin</span>':'')+' · você está em</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">'+EVENTO+'</div></div>'
++'<div class="search">'+ic('search',18)+'<input id="busca" type="search" aria-label="Buscar no cardápio" placeholder="Buscar no cardápio" value="'+esc(S.busca)+'"></div></div>';
+h+='<div class="chips">'+CATS.map(function(c){return '<button class="chip'+(S.cat===c?' on':'')+'" data-a="cat" data-v="'+c+'">'+c+'</button>';}).join('')+'</div>';
+h+='<div class="body"><div class="sora" style="font-weight:700;font-size:16px">Cardápio</div>';
+if(!list.length)h+='<div class="empty">Nenhum item encontrado.</div>';
+list.forEach(function(p){h+='<button class="prod" data-a="item" data-v="'+p.id+'"><span class="tile">'+ic(p.icon,28,1.8)+'</span><span class="grow"><span class="name" style="display:block">'+p.nome+'</span><span class="sub" style="display:block">'+p.desc+'</span><span class="price" style="display:block">'+brl(p.preco)+'</span></span><span class="round solid">'+ic('plus',20,2.4)+'</span></button>';});
+h+='<button class="pill" style="align-self:center;border:1px solid var(--line2);margin-top:8px" data-a="balcao">'+ic('scan',18)+'Abrir modo balcão (atendente)</button><button class="linkbtn" style="align-self:center" data-a="sair">Sair da conta</button></div>';
+if(cartCount())h+='<div class="foot"><button class="cta" data-a="pedido"><span style="text-align:left"><span style="display:block;font-size:12px;font-weight:500">'+cartCount()+(cartCount()>1?' itens':' item')+' no pedido</span><span class="sora" style="font-size:17px">'+brl(cartTotal())+'</span></span><span class="row" style="gap:6px">Ver pedido'+ic('next',18,2.4)+'</span></button></div>';
+return h;
+}
+
+function vItem(){
+var p=prod(S.item);
+return '<div class="hero"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><div style="flex:1;display:flex;align-items:center;justify-content:center">'+ic(p.icon,130,1.2)+'</div></div>'
++'<div class="body" style="padding-top:22px"><div class="eyebrow">'+p.cat+'</div><h1 style="margin:0;font-size:26px">'+p.nome+'</h1><div class="sub" style="font-size:15px">'+p.desc+'. Retire no balcão mostrando sua ficha digital.</div><div class="price" style="font-size:22px">'+brl(p.preco)+'</div>'
++'<div class="box row between" style="margin-top:8px"><div class="name">Quantidade</div><div class="row" style="gap:16px"><button class="step" aria-label="Diminuir quantidade" data-a="menos">&minus;</button><div class="sora" style="font-weight:700;font-size:20px;min-width:22px;text-align:center" aria-live="polite">'+S.qtd+'</div><button class="step add" aria-label="Aumentar quantidade" data-a="mais">+</button></div></div>'
++'<div class="sub">Cada unidade gera uma ficha separada, para você retirar quando quiser.</div></div>'
++'<div class="foot"><button class="cta" data-a="add"><span>Adicionar ao pedido</span><span class="sora">'+brl(p.preco*S.qtd)+'</span></button></div>';
+}
+
+function vPedido(){
+var h='<div class="head"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1>Seu pedido</h1></div><div class="body">';
+if(!cartCount())return h+'<div class="empty">Seu pedido está vazio.</div><button class="cta center" data-a="menu">Ver cardápio</button></div>';
+h+='<div class="box">';
+for(var k in S.cart){var p=prod(k);h+='<div class="row" style="gap:12px;padding:8px 0"><div class="tile sora" style="width:40px;height:40px;border-radius:10px;font-weight:700;font-size:14px">'+S.cart[k]+'x</div><div class="grow name">'+p.nome+'</div><div class="name">'+brl(p.preco*S.cart[k])+'</div><button class="round" style="border:0" aria-label="Remover '+p.nome+'" data-a="rem" data-v="'+k+'">'+ic('trash',18)+'</button></div>';}
+h+='<div class="hr"></div><div class="row between"><div style="font-weight:700;font-size:16px">Total</div><div class="sora" style="font-weight:700;font-size:20px">'+brl(cartTotal())+'</div></div></div>';
+h+='<fieldset style="border:0;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px"><legend class="sora" style="padding:0 0 10px;font-weight:700;font-size:16px">Como você quer pagar?</legend>'
++'<label class="pay'+(S.pag==='pix'?' on':'')+'"><span class="tile" style="width:44px;height:44px;border-radius:12px">'+ic('bolt',22)+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">Pix</span><span class="sub">Ficha liberada na hora</span></span><input type="radio" name="pag" value="pix"'+(S.pag==='pix'?' checked':'')+'></label>'
++'<label class="pay'+(S.pag==='cartao'?' on':'')+'"><span class="tile" style="width:44px;height:44px;border-radius:12px">'+ic('can',22)+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">Cartão de crédito</span><span class="sub">Aprovação em segundos</span></span><input type="radio" name="pag" value="cartao"'+(S.pag==='cartao'?' checked':'')+'></label></fieldset>';
+h+='</div><div class="foot"><button class="cta center" data-a="pagar">Pagar '+brl(cartTotal())+'</button></div>';
+return h;
+}
+
+function vPix(){
+var tipo=S.pag==='pix'?'Pague com Pix':'Pagamento com cartão';
+return '<div class="head"><button class="round" aria-label="Voltar ao pedido" data-a="pedido">'+ic('back',20,2.4)+'</button><h1>'+tipo+'</h1></div><div class="body">'
++'<div class="box" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 20px"><div style="text-align:center"><div class="eyebrow">Total a pagar</div><div class="sora" style="font-weight:800;font-size:32px">'+brl(cartTotal())+'</div></div>'
++(S.pag==='pix'?'<div style="padding:12px;border-radius:18px;border:2px solid var(--navy)">'+qrSvg('pix'+cartTotal())+'</div>':'')
++'<div class="sub" style="text-align:center">Pagamento simulado. Nesta versão de demonstração nenhum valor é cobrado.</div></div>'
++'<div class="note"><span class="spin"></span><span><b>Aguardando pagamento</b>No app real, as fichas aparecem sozinhas quando o pagamento é confirmado.</span></div>'
++'</div><div class="foot"><button class="cta center" data-a="aprovar">Simular pagamento aprovado</button></div>';
+}
+
+function ticketHtml(f){
+return '<button class="ticket" data-a="abrir" data-v="'+f.codigo+'"'+(f.usada?' disabled':'')+'><span class="stub'+(f.usada?' used':'')+'">'+ic(prod(f.prod).icon,30,1.8)+'</span><span class="dash"></span><span class="grow" style="padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center"><span class="name" style="font-weight:700">'+prod(f.prod).nome+'</span><span class="sub">Ficha '+f.codigo+'</span>'
++(f.usada?'<span class="usedc">Já retirada</span>':'<span class="okc row" style="gap:6px">'+ic('check',14,3)+'Pronta para retirar</span>')+'</span>'+(f.usada?'':'<span class="row" style="padding-right:14px">'+ic('next',20,2.4)+'</span>')+'</button>';
+}
+function vFichas(){
+var d=S.fichas.filter(function(f){return !f.usada;}),u=S.fichas.filter(function(f){return f.usada;});
+var list=S.aba==='disp'?d:u;
+var h='<div class="top"><div class="row" style="gap:12px"><button class="round dark" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1 style="margin:0;font-size:22px">Minhas fichas</h1></div><div class="seg"><button class="'+(S.aba==='disp'?'on':'')+'" data-a="aba" data-v="disp">Disponíveis ('+d.length+')</button><button class="'+(S.aba==='usadas'?'on':'')+'" data-a="aba" data-v="usadas">Usadas ('+u.length+')</button></div></div><div class="body" style="padding-top:20px">';
+if(!list.length)h+='<div class="empty">'+(S.aba==='disp'?'Você ainda não tem fichas disponíveis.':'Nenhuma ficha usada ainda.')+'</div>';
+list.forEach(function(f){h+=ticketHtml(f);});
+h+='</div><div class="foot"><button class="cta center" data-a="menu">Comprar mais</button></div>';
+return h;
+}
+
+function vFicha(){
+var f=S.fichas.filter(function(x){return x.codigo===S.ficha;})[0];
+if(!f||f.usada){return vFichas();}
+return '<div class="dark" style="flex:1;display:flex;flex-direction:column;gap:18px;padding:22px 20px"><div class="row between"><button class="round dark" aria-label="Voltar para minhas fichas" data-a="fichas">'+ic('back',20,2.4)+'</button><div class="brand" style="font-size:20px">FLUXO</div><span style="width:44px"></span></div>'
++'<div style="text-align:center"><h1 style="margin:0;font-size:24px">Mostre no balcão</h1><div class="sub" style="font-size:14px;margin-top:6px">O atendente lê o código e entrega seu pedido.</div></div>'
++'<div class="qr"><div class="eyebrow">Vale 1 unidade</div><div class="sora" style="font-weight:700;font-size:22px">'+prod(f.prod).nome+'</div><div id="qrbox"></div><div class="code">'+f.codigo+'</div><div class="bar"><i id="qrbar" style="width:100%"></i></div><div class="sub" style="text-align:center">Código renovado a cada 30 segundos (QR ilustrativo nesta demonstração).</div></div>'
++'<button class="pill ghost" style="align-self:center" data-a="balcao-com" data-v="'+f.codigo+'">'+ic('scan',18)+'Simular leitura no balcão</button></div>';
+}
+function tickQr(){
+var f=S.ficha,box=document.getElementById('qrbox'),bar=document.getElementById('qrbar');if(!box)return;
+var now=Date.now(),slot=Math.floor(now/30000);
+if(box.getAttribute('data-slot')!==String(slot)){box.innerHTML=qrSvg(f+slot);box.setAttribute('data-slot',slot);}
+bar.style.width=(100-((now%30000)/300))+'%';
+}
+
+function vBalcao(){
+var h='<div class="top" style="background:var(--navy)"><div class="row between"><div class="brand" style="font-size:20px">FLUXO <span style="font-weight:600;letter-spacing:0">Balcão</span></div><button class="pill" data-a="menu">Sair do modo balcão</button></div><div class="sub" style="color:#C9D6F5">Tela do atendente. No app real a leitura é pela câmera; aqui você digita o código da ficha.</div></div><div class="body" style="padding-top:20px">';
+if(S.leitura){
+var L=S.leitura;
+if(L.ok)h+='<div class="result ok" role="status"><div class="round" style="width:84px;height:84px;border-radius:42px;border:0;color:var(--ok)">'+ic('check',44,3)+'</div><h2>Ficha válida</h2><div>Entregue: <b>1x '+prod(L.prod).nome+'</b></div><div style="font-size:13px">'+L.codigo+' · baixa registrada</div></div>';
+else h+='<div class="result bad" role="alert"><div class="round" style="width:84px;height:84px;border-radius:42px;border:0;color:var(--bad)">'+ic('x',44,3)+'</div><h2>'+(L.motivo==='usada'?'Ficha já usada':'Ficha não encontrada')+'</h2><div>Não entregue o pedido.</div><div style="font-size:13px">'+esc(L.codigo)+'</div></div>';
+h+='<button class="cta center navy" data-a="proxima">'+ic('scan',22)+'&nbsp; Ler próxima ficha</button>';
+}else{
+h+='<label class="name" for="cod">Código da ficha</label><input id="cod" class="field" type="text" autocomplete="off" placeholder="FLX-0000-0000" value="'+esc(S.codigo)+'"><button class="cta center" data-a="validar">Validar ficha</button>';
+var d=S.fichas.filter(function(f){return !f.usada;});
+if(d.length){h+='<div class="eyebrow" style="margin-top:10px">Fichas disponíveis neste aparelho (atalho de teste)</div>';d.forEach(function(f){h+='<button class="prod" data-a="validar-cod" data-v="'+f.codigo+'"><span class="grow"><span class="name" style="display:block">'+prod(f.prod).nome+'</span><span class="sub">'+f.codigo+'</span></span><span class="round solid">'+ic('scan',20)+'</span></button>';});}
+}
+h+='<button class="pill" style="align-self:center;border:1px solid var(--line2);margin-top:14px" data-a="reset">'+ic('trash',18)+'Apagar dados de teste</button></div>';
+return h;
+}
+
+function validar(cod){
+cod=String(cod||'').trim().toUpperCase();if(!cod)return;
+var f=S.fichas.filter(function(x){return x.codigo===cod;})[0];
+if(!f)S.leitura={ok:false,motivo:'inexistente',codigo:cod};
+else if(f.usada)S.leitura={ok:false,motivo:'usada',codigo:cod};
+else{f.usada=true;save();S.leitura={ok:true,codigo:cod,prod:f.prod};}
+S.codigo='';render();
+}
+
+function render(){
+if(!S.user)S.view='login';
+var v={login:vLogin,menu:vMenu,item:vItem,pedido:vPedido,pix:vPix,fichas:vFichas,ficha:vFicha,balcao:vBalcao}[S.view]();
+app.innerHTML='<div class="demo">Versão de demonstração · pagamento simulado · dados salvos só neste aparelho</div>'+v;
+if(S.view==='ficha'&&document.getElementById('qrbox')){tickQr();if(!timer)timer=setInterval(tickQr,500);}
+}
+
+app.addEventListener('click',function(e){
+var b=e.target.closest('[data-a]');if(!b)return;var a=b.getAttribute('data-a'),v=b.getAttribute('data-v');
+if(a==='auth'){S.auth=v;S.erro='';render();}
+else if(a==='sair'){S.user=null;S.auth='entrar';save();go('login');}
+else if(a==='menu')go('menu',{leitura:null});
+else if(a==='fichas')go('fichas');
+else if(a==='cat'){S.cat=v;render();}
+else if(a==='item')go('item',{item:v,qtd:1});
+else if(a==='menos'){if(S.qtd>1){S.qtd--;render();}}
+else if(a==='mais'){if(S.qtd<20){S.qtd++;render();}}
+else if(a==='add'){S.cart[S.item]=(S.cart[S.item]||0)+S.qtd;save();go('menu');}
+else if(a==='pedido')go('pedido');
+else if(a==='rem'){delete S.cart[v];save();render();}
+else if(a==='pagar')go('pix');
+else if(a==='aprovar'){for(var k in S.cart)for(var i=0;i<S.cart[k];i++)S.fichas.unshift({codigo:novoCodigo(),prod:k,usada:false});S.cart={};save();go('fichas',{aba:'disp'});}
+else if(a==='aba'){S.aba=v;render();}
+else if(a==='abrir')go('ficha',{ficha:v});
+else if(a==='balcao')go('balcao',{leitura:null,codigo:''});
+else if(a==='balcao-com'){go('balcao',{leitura:null,codigo:''});validar(v);}
+else if(a==='validar'){var c=document.getElementById('cod');validar(c?c.value:'');}
+else if(a==='validar-cod')validar(v);
+else if(a==='proxima'){S.leitura=null;render();}
+else if(a==='reset'){S.cart={};S.fichas=[];S.leitura=null;save();render();}
+});
+app.addEventListener('input',function(e){
+if(e.target.id==='busca'){S.busca=e.target.value;var pos=e.target.selectionStart;render();var n=document.getElementById('busca');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(x){}}}
+else if(e.target.id==='cod'){S.codigo=e.target.value;}
+else if(e.target.id==='f-cpf'){e.target.value=maskCpf(e.target.value);}
+else if(e.target.id==='f-cel'){e.target.value=maskCel(e.target.value);}
+});
+app.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='authform')autenticar();});
+app.addEventListener('change',function(e){if(e.target.name==='pag'){S.pag=e.target.value;render();}});
+app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='cod'){validar(e.target.value);}});
+render();
+})();
+</script>
+</body>
+</html>
