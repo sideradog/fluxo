@@ -113,16 +113,23 @@ function ic(n,s,w){return '<svg aria-hidden="true" width="'+(s||20)+'" height="'
 
 var EVENTO='Evento de demonstração';
 var PRODS=[
-{id:'p1',nome:'Cerveja long neck',desc:'330 ml, gelada',preco:15,cat:'Bebidas',icon:'bottle'},
-{id:'p2',nome:'Balde com 6 long necks',desc:'Combo para a galera',preco:80,cat:'Combos',icon:'bucket'},
-{id:'p3',nome:'Água com gás',desc:'500 ml',preco:6,cat:'Bebidas',icon:'drop'},
-{id:'p4',nome:'Refrigerante lata',desc:'350 ml',preco:8,cat:'Bebidas',icon:'can'},
-{id:'p5',nome:'Energético',desc:'Lata 250 ml',preco:18,cat:'Bebidas',icon:'bolt'},
-{id:'p6',nome:'Porção de batata',desc:'Serve 2 pessoas',preco:30,cat:'Comidas',icon:'food'}
+{id:'b1',nome:'Antarctica Boa',desc:'Unidade',preco:10,cat:'Bebidas',icon:'bottle'},
+{id:'b2',nome:'Skol Beats',desc:'Unidade',preco:15,cat:'Bebidas',icon:'bottle'},
+{id:'b3',nome:'Copão de vodka',desc:'Copo',preco:15,cat:'Bebidas',icon:'can'},
+{id:'b4',nome:'Red Bull',desc:'Lata',preco:20,cat:'Bebidas',icon:'bolt'},
+{id:'b5',nome:'Big Power 2 litros',desc:'Energético, garrafa de 2 litros',preco:25,cat:'Bebidas',icon:'bolt'},
+{id:'b6',nome:'Água',desc:'Garrafa',preco:5,cat:'Bebidas',icon:'drop'},
+{id:'p1',nome:'Antarctica Boa, 3 unidades',desc:'Promoção: 3 unidades por R$ 25,00',preco:25,cat:'Promoções',icon:'bottle'},
+{id:'c1',nome:'Balde com 6 Antarctica Boa',desc:'6 unidades no balde',preco:45,cat:'Combos',icon:'bucket'},
+{id:'c2',nome:'Combo Red Label + 4 Red Bull',desc:'1 garrafa de Red Label e 4 Red Bull',preco:300,cat:'Combos',icon:'bucket'},
+{id:'c3',nome:'Combo Smirnoff + 4 Red Bull',desc:'1 garrafa de Smirnoff e 4 Red Bull',preco:250,cat:'Combos',icon:'bucket'},
+{id:'c4',nome:'Red Label + Big Power + gelo + copo',desc:'1 garrafa de Red Label, Big Power, gelo e copo',preco:230,cat:'Combos',icon:'bucket'},
+{id:'c5',nome:'Smirnoff + Big Power + gelo + copo',desc:'1 garrafa de Smirnoff, Big Power, gelo e copo',preco:180,cat:'Combos',icon:'bucket'},
+{id:'o1',nome:'Bistrô',desc:'Item do cardápio original',preco:50,cat:'Outros',icon:'ticket'}
 ];
-var CATS=['Todos','Bebidas','Combos','Comidas'];
+var CATS=['Todos','Bebidas','Promoções','Combos','Outros'];
 
-var KEY='fluxo-demo-v1';
+var KEY='fluxo-demo-v2';
 var S={view:'menu',cat:'Todos',busca:'',item:null,qtd:1,pag:'pix',cart:{},fichas:[],aba:'disp',ficha:null,leitura:null,codigo:''};
 S.user=null;S.auth='entrar';S.erro='';
 try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){S.cart=sv.cart||{};S.fichas=sv.fichas||[];S.user=sv.user||null;}}catch(e){}
@@ -205,7 +212,7 @@ var p=prod(S.item);
 return '<div class="hero"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><div style="flex:1;display:flex;align-items:center;justify-content:center">'+ic(p.icon,130,1.2)+'</div></div>'
 +'<div class="body" style="padding-top:22px"><div class="eyebrow">'+p.cat+'</div><h1 style="margin:0;font-size:26px">'+p.nome+'</h1><div class="sub" style="font-size:15px">'+p.desc+'. Retire no balcão mostrando sua ficha digital.</div><div class="price" style="font-size:22px">'+brl(p.preco)+'</div>'
 +'<div class="box row between" style="margin-top:8px"><div class="name">Quantidade</div><div class="row" style="gap:16px"><button class="step" aria-label="Diminuir quantidade" data-a="menos">&minus;</button><div class="sora" style="font-weight:700;font-size:20px;min-width:22px;text-align:center" aria-live="polite">'+S.qtd+'</div><button class="step add" aria-label="Aumentar quantidade" data-a="mais">+</button></div></div>'
-+'<div class="sub">Cada unidade gera uma ficha separada, para você retirar quando quiser.</div></div>'
++'<div class="sub">Cada item do pedido gera uma ficha separada, para você retirar quando quiser.</div></div>'
 +'<div class="foot"><button class="cta" data-a="add"><span>Adicionar ao pedido</span><span class="sora">'+brl(p.preco*S.qtd)+'</span></button></div>';
 }
 
@@ -251,7 +258,7 @@ var f=S.fichas.filter(function(x){return x.codigo===S.ficha;})[0];
 if(!f||f.usada){return vFichas();}
 return '<div class="dark" style="flex:1;display:flex;flex-direction:column;gap:18px;padding:22px 20px"><div class="row between"><button class="round dark" aria-label="Voltar para minhas fichas" data-a="fichas">'+ic('back',20,2.4)+'</button><div class="brand" style="font-size:20px">FLUXO</div><span style="width:44px"></span></div>'
 +'<div style="text-align:center"><h1 style="margin:0;font-size:24px">Mostre no balcão</h1><div class="sub" style="font-size:14px;margin-top:6px">O atendente lê o código e entrega seu pedido.</div></div>'
-+'<div class="qr"><div class="eyebrow">Vale 1 unidade</div><div class="sora" style="font-weight:700;font-size:22px">'+prod(f.prod).nome+'</div><div id="qrbox"></div><div class="code">'+f.codigo+'</div><div class="bar"><i id="qrbar" style="width:100%"></i></div><div class="sub" style="text-align:center">Código renovado a cada 30 segundos (QR ilustrativo nesta demonstração).</div></div>'
++'<div class="qr"><div class="eyebrow">Vale 1 retirada</div><div class="sora" style="font-weight:700;font-size:22px">'+prod(f.prod).nome+'</div><div id="qrbox"></div><div class="code">'+f.codigo+'</div><div class="bar"><i id="qrbar" style="width:100%"></i></div><div class="sub" style="text-align:center">Código renovado a cada 30 segundos (QR ilustrativo nesta demonstração).</div></div>'
 +'<button class="pill ghost" style="align-self:center" data-a="balcao-com" data-v="'+f.codigo+'">'+ic('scan',18)+'Simular leitura no balcão</button></div>';
 }
 function tickQr(){
