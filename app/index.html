@@ -78,6 +78,9 @@ h1,h2,.sora{font-family:Sora,sans-serif}
 .result h2{margin:0;font-size:26px}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 10px}
 .spin{width:22px;height:22px;border:3px solid var(--line2);border-top-color:var(--mid);border-radius:50%;animation:s 1s linear infinite;flex-shrink:0}
+.evrow{display:flex;align-items:center;gap:16px;padding:14px 0;background:none;border:0;width:100%;text-align:left;color:inherit}
+.evthumb{width:84px;height:84px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;letter-spacing:1px;flex-shrink:0;border:1px solid var(--line)}
+.evchip{background:var(--tint);color:var(--navy);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
 .shade{position:fixed;inset:0;background:rgba(10,31,77,.55);z-index:30}
 .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;padding:18px 14px 22px;z-index:31;display:flex;flex-direction:column;gap:2px;max-height:85%;overflow:auto}
 .login{flex:1;background:#FEFEFE;display:flex;flex-direction:column;padding:8px 24px 28px;gap:18px}
@@ -115,9 +118,9 @@ trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
 function ic(n,s,w){return '<svg aria-hidden="true" width="'+(s||20)+'" height="'+(s||20)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round">'+IC[n]+'</svg>';}
 
 var EVENTOS=[
-{id:'e1',nome:'Evento de demonstração',quando:'[DATA DO EVENTO]',onde:'[LOCAL]'},
-{id:'e2',nome:'Evento exemplo 2',quando:'[DATA DO EVENTO]',onde:'[LOCAL]'},
-{id:'e3',nome:'Evento exemplo 3',quando:'[DATA DO EVENTO]',onde:'[LOCAL]'}
+{id:'e1',nome:'White Party',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'WP',cor:'#E9EEF8',tx:'#0A1F4D'},
+{id:'e2',nome:'American Pie',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'AP',cor:'#B3261E',tx:'#FFFFFF'},
+{id:'e3',nome:'Traffic Night',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'TN',cor:'#0A1F4D',tx:'#FFD23F'}
 ];
 function ev(id){for(var i=0;i<EVENTOS.length;i++)if(EVENTOS[i].id===id)return EVENTOS[i];return EVENTOS[0];}
 var PRODS=[
@@ -249,9 +252,12 @@ return '<div class="head"><button class="round" aria-label="Voltar ao pedido" da
 }
 
 function vEventos(){
-var h='<div class="head"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1>Eventos</h1></div><div class="body"><div class="sub">Escolha o evento em que você está. O cardápio é o mesmo, e cada ficha vale no evento em que foi comprada.</div>';
-EVENTOS.forEach(function(e){var on=e.id===S.evento;
-h+='<button class="prod" style="'+(on?'border:2px solid var(--blue)':'')+'" data-a="evento" data-v="'+e.id+'"><span class="tile">'+ic('cal',26,1.8)+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">'+e.nome+'</span><span class="sub" style="display:block">'+e.quando+' · '+e.onde+'</span>'+(on?'<span class="okc row" style="gap:6px">'+ic('check',14,3)+'Você está neste evento</span>':'')+'</span>'+(on?'':'<span class="row">'+ic('next',20,2.4)+'</span>')+'</button>';});
+var q=(S.buscaEv||'').trim().toLowerCase();
+var list=EVENTOS.filter(function(e){return !q||e.nome.toLowerCase().indexOf(q)>=0||e.onde.toLowerCase().indexOf(q)>=0;});
+var h='<div class="top"><div class="row" style="gap:12px"><button class="round dark" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1 style="margin:0;font-size:22px">Eventos</h1></div><div class="search">'+ic('search',18)+'<input id="buscaev" type="search" aria-label="Buscar eventos" placeholder="Busque eventos ou cidades" value="'+esc(S.buscaEv||'')+'"></div></div><div class="body" style="padding-top:18px;gap:0">';
+if(!list.length)h+='<div class="empty">Nenhum evento encontrado.</div>';
+list.forEach(function(e,i){var on=e.id===S.evento;
+h+='<button class="evrow" data-a="evento" data-v="'+e.id+'" style="'+(i?'border-top:1px solid var(--line)':'')+'"><span class="evthumb sora" style="background:'+e.cor+';color:'+e.tx+'">'+e.sig+'</span><span class="grow" style="display:flex;flex-direction:column;gap:5px;align-items:flex-start"><span class="sora" style="font-weight:700;font-size:17px">'+e.nome+'</span><span class="sub" style="font-size:14px">'+e.quando+'</span><span class="row" style="gap:6px;flex-wrap:wrap"><span class="evchip">'+e.onde+'</span>'+(on?'<span class="evchip" style="background:#DDF3E7;color:var(--ok)">Você está aqui</span>':'')+'</span></span></button>';});
 return h+'</div>';
 }
 function vPerfil(){
@@ -362,6 +368,7 @@ else if(a==='reset'){S.cart={};S.fichas=[];S.leitura=null;save();render();}
 app.addEventListener('input',function(e){
 if(e.target.id==='busca'){S.busca=e.target.value;var pos=e.target.selectionStart;render();var n=document.getElementById('busca');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(x){}}}
 else if(e.target.id==='cod'){S.codigo=e.target.value;}
+else if(e.target.id==='buscaev'){S.buscaEv=e.target.value;var p2=e.target.selectionStart;render();var n2=document.getElementById('buscaev');if(n2){n2.focus();try{n2.setSelectionRange(p2,p2);}catch(x){}}}
 else if(e.target.id==='f-cpf'){e.target.value=maskCpf(e.target.value);}
 else if(e.target.id==='f-cel'){e.target.value=maskCel(e.target.value);}
 });
