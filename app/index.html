@@ -113,14 +113,14 @@ function ic(n,s,w){return '<svg aria-hidden="true" width="'+(s||20)+'" height="'
 
 var EVENTO='Evento de demonstração';
 var PRODS=[
-{id:'b1',nome:'Antarctica Boa',desc:'Unidade',preco:10,cat:'Bebidas',icon:'bottle'},
-{id:'b2',nome:'Skol Beats',desc:'Unidade',preco:15,cat:'Bebidas',icon:'bottle'},
+{id:'b1',img:'img/antarctica.jpg',nome:'Antarctica Boa',desc:'Unidade',preco:10,cat:'Bebidas',icon:'bottle'},
+{id:'b2',img:'img/skol-beats.jpg',nome:'Skol Beats',desc:'Unidade',preco:15,cat:'Bebidas',icon:'bottle'},
 {id:'b3',nome:'Copão de vodka',desc:'Copo',preco:15,cat:'Bebidas',icon:'can'},
-{id:'b4',nome:'Red Bull',desc:'Lata',preco:20,cat:'Bebidas',icon:'bolt'},
-{id:'b5',nome:'Big Power 2 litros',desc:'Energético, garrafa de 2 litros',preco:25,cat:'Bebidas',icon:'bolt'},
+{id:'b4',img:'img/red-bull.jpg',nome:'Red Bull',desc:'Lata',preco:20,cat:'Bebidas',icon:'bolt'},
+{id:'b5',img:'img/big-power.jpg',nome:'Big Power 2 litros',desc:'Energético, garrafa de 2 litros',preco:25,cat:'Bebidas',icon:'bolt'},
 {id:'b6',nome:'Água',desc:'Garrafa',preco:5,cat:'Bebidas',icon:'drop'},
-{id:'p1',nome:'Antarctica Boa, 3 unidades',desc:'Promoção: 3 unidades por R$ 25,00',preco:25,cat:'Promoções',icon:'bottle'},
-{id:'c1',nome:'Balde com 6 Antarctica Boa',desc:'6 unidades no balde',preco:45,cat:'Combos',icon:'bucket'},
+{id:'p1',img:'img/antarctica.jpg',nome:'Antarctica Boa, 3 unidades',desc:'Promoção: 3 unidades por R$ 25,00',preco:25,cat:'Promoções',icon:'bottle'},
+{id:'c1',img:'img/antarctica.jpg',nome:'Balde com 6 Antarctica Boa',desc:'6 unidades no balde',preco:45,cat:'Combos',icon:'bucket'},
 {id:'c2',nome:'Combo Red Label + 4 Red Bull',desc:'1 garrafa de Red Label e 4 Red Bull',preco:300,cat:'Combos',icon:'bucket'},
 {id:'c3',nome:'Combo Smirnoff + 4 Red Bull',desc:'1 garrafa de Smirnoff e 4 Red Bull',preco:250,cat:'Combos',icon:'bucket'},
 {id:'c4',nome:'Red Label + Big Power + gelo + copo',desc:'1 garrafa de Red Label, Big Power, gelo e copo',preco:230,cat:'Combos',icon:'bucket'},
@@ -167,6 +167,7 @@ adm=true;}
 S.erro='';S.user=adm?{nome:'Sid',admin:true}:{nome:criar?nome.split(' ')[0]:'cliente'};save();go('menu');
 }
 
+function pic(p,s,w){return p.img?'<img src="'+p.img+'" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">':ic(p.icon,s,w);}
 function brl(v){return 'R$ '+v.toFixed(2).replace('.',',');}
 function prod(id){for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return null;}
 function cartCount(){var n=0;for(var k in S.cart)n+=S.cart[k];return n;}
@@ -201,7 +202,7 @@ var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><
 h+='<div class="chips">'+CATS.map(function(c){return '<button class="chip'+(S.cat===c?' on':'')+'" data-a="cat" data-v="'+c+'">'+c+'</button>';}).join('')+'</div>';
 h+='<div class="body"><div class="sora" style="font-weight:700;font-size:16px">Cardápio</div>';
 if(!list.length)h+='<div class="empty">Nenhum item encontrado.</div>';
-list.forEach(function(p){h+='<button class="prod" data-a="item" data-v="'+p.id+'"><span class="tile">'+ic(p.icon,28,1.8)+'</span><span class="grow"><span class="name" style="display:block">'+p.nome+'</span><span class="sub" style="display:block">'+p.desc+'</span><span class="price" style="display:block">'+brl(p.preco)+'</span></span><span class="round solid">'+ic('plus',20,2.4)+'</span></button>';});
+list.forEach(function(p){h+='<button class="prod" data-a="item" data-v="'+p.id+'"><span class="tile" style="'+(p.img?'background:#fff;border:1px solid var(--line);padding:3px':'')+'">'+pic(p,28,1.8)+'</span><span class="grow"><span class="name" style="display:block">'+p.nome+'</span><span class="sub" style="display:block">'+p.desc+'</span><span class="price" style="display:block">'+brl(p.preco)+'</span></span><span class="round solid">'+ic('plus',20,2.4)+'</span></button>';});
 h+='<button class="pill" style="align-self:center;border:1px solid var(--line2);margin-top:8px" data-a="balcao">'+ic('scan',18)+'Abrir modo balcão (atendente)</button><button class="linkbtn" style="align-self:center" data-a="sair">Sair da conta</button></div>';
 if(cartCount())h+='<div class="foot"><button class="cta" data-a="pedido"><span style="text-align:left"><span style="display:block;font-size:12px;font-weight:500">'+cartCount()+(cartCount()>1?' itens':' item')+' no pedido</span><span class="sora" style="font-size:17px">'+brl(cartTotal())+'</span></span><span class="row" style="gap:6px">Ver pedido'+ic('next',18,2.4)+'</span></button></div>';
 return h;
@@ -209,7 +210,7 @@ return h;
 
 function vItem(){
 var p=prod(S.item);
-return '<div class="hero"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><div style="flex:1;display:flex;align-items:center;justify-content:center">'+ic(p.icon,130,1.2)+'</div></div>'
+return '<div class="hero"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">'+(p.img?'<div style="height:170px;width:170px;background:#fff;border-radius:22px;padding:10px">'+pic(p)+'</div>':ic(p.icon,130,1.2))+'</div></div>'
 +'<div class="body" style="padding-top:22px"><div class="eyebrow">'+p.cat+'</div><h1 style="margin:0;font-size:26px">'+p.nome+'</h1><div class="sub" style="font-size:15px">'+p.desc+'. Retire no balcão mostrando sua ficha digital.</div><div class="price" style="font-size:22px">'+brl(p.preco)+'</div>'
 +'<div class="box row between" style="margin-top:8px"><div class="name">Quantidade</div><div class="row" style="gap:16px"><button class="step" aria-label="Diminuir quantidade" data-a="menos">&minus;</button><div class="sora" style="font-weight:700;font-size:20px;min-width:22px;text-align:center" aria-live="polite">'+S.qtd+'</div><button class="step add" aria-label="Aumentar quantidade" data-a="mais">+</button></div></div>'
 +'<div class="sub">Cada item do pedido gera uma ficha separada, para você retirar quando quiser.</div></div>'
