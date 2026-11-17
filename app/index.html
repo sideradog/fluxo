@@ -78,6 +78,8 @@ h1,h2,.sora{font-family:Sora,sans-serif}
 .result h2{margin:0;font-size:26px}
 .empty{text-align:center;color:var(--muted);font-size:14px;padding:30px 10px}
 .spin{width:22px;height:22px;border:3px solid var(--line2);border-top-color:var(--mid);border-radius:50%;animation:s 1s linear infinite;flex-shrink:0}
+.shade{position:fixed;inset:0;background:rgba(10,31,77,.55);z-index:30}
+.sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;padding:18px 14px 22px;z-index:31;display:flex;flex-direction:column;gap:2px;max-height:85%;overflow:auto}
 .login{flex:1;background:#FEFEFE;display:flex;flex-direction:column;padding:8px 24px 28px;gap:18px}
 .login img{width:230px;max-width:70%;height:auto;align-self:center;display:block}
 .login h1{margin:0;font-size:22px;text-align:center}
@@ -105,13 +107,19 @@ food:'<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-2 2-2 2-4M13 7c0-2 2-2
 back:'<path d="M15 6l-6 6 6 6"/>',next:'<path d="M9 6l6 6-6 6"/>',
 plus:'<path d="M12 5v14M5 12h14"/>',check:'<path d="M5 12l5 5 9-10"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
 ticket:'<path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6z"/>',
+dots:'<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.600-7 8-7s8 3 8 7"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',list:'<path d="M4 6h16M4 12h16M4 18h16"/>',out:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
 search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.500-3.500"/>',
 scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/>',
 trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
 };
 function ic(n,s,w){return '<svg aria-hidden="true" width="'+(s||20)+'" height="'+(s||20)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(w||2)+'" stroke-linecap="round" stroke-linejoin="round">'+IC[n]+'</svg>';}
 
-var EVENTO='Evento de demonstração';
+var EVENTOS=[
+{id:'e1',nome:'Evento de demonstração',quando:'[DATA DO EVENTO]',onde:'[LOCAL]'},
+{id:'e2',nome:'Evento exemplo 2',quando:'[DATA DO EVENTO]',onde:'[LOCAL]'},
+{id:'e3',nome:'Evento exemplo 3',quando:'[DATA DO EVENTO]',onde:'[LOCAL]'}
+];
+function ev(id){for(var i=0;i<EVENTOS.length;i++)if(EVENTOS[i].id===id)return EVENTOS[i];return EVENTOS[0];}
 var PRODS=[
 {id:'b1',img:'img/antarctica.jpg',nome:'Antarctica Boa',desc:'Unidade',preco:10,cat:'Bebidas',icon:'bottle'},
 {id:'b2',img:'img/skol-beats.jpg',nome:'Skol Beats',desc:'Unidade',preco:15,cat:'Bebidas',icon:'bottle'},
@@ -130,11 +138,11 @@ var PRODS=[
 var CATS=['Todos','Bebidas','Promoções','Combos','Mesas'];
 
 var KEY='fluxo-demo-v2';
-var S={view:'menu',cat:'Todos',busca:'',item:null,qtd:1,pag:'pix',cart:{},fichas:[],aba:'disp',ficha:null,leitura:null,codigo:''};
+var S={view:'menu',cat:'Todos',busca:'',item:null,qtd:1,pag:'pix',cart:{},fichas:[],aba:'disp',ficha:null,leitura:null,codigo:'',evento:'e1',sheet:false};
 S.user=null;S.auth='entrar';S.erro='';
-try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){S.cart=sv.cart||{};S.fichas=sv.fichas||[];S.user=sv.user||null;}}catch(e){}
+try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){S.cart=sv.cart||{};S.fichas=sv.fichas||[];S.user=sv.user||null;S.evento=sv.evento||'e1';}}catch(e){}
 if(!S.user)S.view='login';
-function save(){try{localStorage.setItem(KEY,JSON.stringify({cart:S.cart,fichas:S.fichas,user:S.user}));}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({cart:S.cart,fichas:S.fichas,user:S.user,evento:S.evento}));}catch(e){}}
 function maskCpf(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1-$2');}
 function maskCel(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');}
 function vLogin(){
@@ -196,14 +204,14 @@ function vMenu(){
 var q=S.busca.trim().toLowerCase();
 var list=PRODS.filter(function(p){return (S.cat==='Todos'||p.cat===S.cat)&&(!q||p.nome.toLowerCase().indexOf(q)>=0);});
 var disp=S.fichas.filter(function(f){return !f.usada;}).length;
-var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button></div>'
-+'<div><div class="eyebrow">Olá, '+esc(S.user?S.user.nome:'cliente')+(S.user&&S.user.admin?' <span style="background:#fff;color:#0A1F4D;border-radius:8px;padding:2px 8px;margin-left:4px">Admin</span>':'')+' · você está em</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">'+EVENTO+'</div></div>'
+var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><div class="row" style="gap:8px"><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button><button class="round dark" aria-label="Abrir menu" data-a="sheet">'+ic('dots',22)+'</button></div></div>'
++'<div><div class="eyebrow">Olá, '+esc(S.user?S.user.nome:'cliente')+(S.user&&S.user.admin?' <span style="background:#fff;color:#0A1F4D;border-radius:8px;padding:2px 8px;margin-left:4px">Admin</span>':'')+' · você está em</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">'+ev(S.evento).nome+'</div></div>'
 +'<div class="search">'+ic('search',18)+'<input id="busca" type="search" aria-label="Buscar no cardápio" placeholder="Buscar no cardápio" value="'+esc(S.busca)+'"></div></div>';
 h+='<div class="chips">'+CATS.map(function(c){return '<button class="chip'+(S.cat===c?' on':'')+'" data-a="cat" data-v="'+c+'">'+c+'</button>';}).join('')+'</div>';
 h+='<div class="body"><div class="sora" style="font-weight:700;font-size:16px">Cardápio</div>';
 if(!list.length)h+='<div class="empty">Nenhum item encontrado.</div>';
 list.forEach(function(p){h+='<button class="prod" data-a="item" data-v="'+p.id+'"><span class="tile" style="'+(p.img?'background:#fff;border:1px solid var(--line);padding:3px':'')+'">'+pic(p,28,1.8)+'</span><span class="grow"><span class="name" style="display:block">'+p.nome+'</span><span class="sub" style="display:block">'+p.desc+'</span><span class="price" style="display:block">'+brl(p.preco)+'</span></span><span class="round solid">'+ic('plus',20,2.4)+'</span></button>';});
-h+='<button class="pill" style="align-self:center;border:1px solid var(--line2);margin-top:8px" data-a="balcao">'+ic('scan',18)+'Abrir modo balcão (atendente)</button><button class="linkbtn" style="align-self:center" data-a="sair">Sair da conta</button></div>';
+h+='</div>';
 if(cartCount())h+='<div class="foot"><button class="cta" data-a="pedido"><span style="text-align:left"><span style="display:block;font-size:12px;font-weight:500">'+cartCount()+(cartCount()>1?' itens':' item')+' no pedido</span><span class="sora" style="font-size:17px">'+brl(cartTotal())+'</span></span><span class="row" style="gap:6px">Ver pedido'+ic('next',18,2.4)+'</span></button></div>';
 return h;
 }
@@ -240,8 +248,28 @@ return '<div class="head"><button class="round" aria-label="Voltar ao pedido" da
 +'</div><div class="foot"><button class="cta center" data-a="aprovar">Simular pagamento aprovado</button></div>';
 }
 
+function vEventos(){
+var h='<div class="head"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1>Eventos</h1></div><div class="body"><div class="sub">Escolha o evento em que você está. O cardápio é o mesmo, e cada ficha vale no evento em que foi comprada.</div>';
+EVENTOS.forEach(function(e){var on=e.id===S.evento;
+h+='<button class="prod" style="'+(on?'border:2px solid var(--blue)':'')+'" data-a="evento" data-v="'+e.id+'"><span class="tile">'+ic('cal',26,1.8)+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">'+e.nome+'</span><span class="sub" style="display:block">'+e.quando+' · '+e.onde+'</span>'+(on?'<span class="okc row" style="gap:6px">'+ic('check',14,3)+'Você está neste evento</span>':'')+'</span>'+(on?'':'<span class="row">'+ic('next',20,2.4)+'</span>')+'</button>';});
+return h+'</div>';
+}
+function vPerfil(){
+var d=S.fichas.filter(function(f){return !f.usada;}).length,u=S.fichas.length-d,n=S.user?S.user.nome:'cliente';
+return '<div class="head"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1>Meu perfil</h1></div><div class="body">'
++'<div class="box row" style="gap:14px"><div class="tile sora" style="border-radius:30px;font-weight:800;font-size:24px;background:var(--navy);color:#fff">'+esc(n.charAt(0).toUpperCase())+'</div><div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+'</div></div></div>'
++'<div class="row" style="gap:12px"><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+d+'</div><div class="sub">fichas disponíveis</div></div><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+u+'</div><div class="sub">fichas usadas</div></div></div>'
++'<button class="prod" data-a="fichas"><span class="tile">'+ic('ticket',26,1.8)+'</span><span class="grow name">Minhas fichas</span>'+ic('next',20,2.4)+'</button>'
++'<button class="prod" data-a="eventos"><span class="tile">'+ic('cal',26,1.8)+'</span><span class="grow"><span class="name" style="display:block">Evento atual</span><span class="sub">'+ev(S.evento).nome+'</span></span>'+ic('next',20,2.4)+'</button>'
++'<button class="cta center line" style="margin-top:8px" data-a="sair">Sair da conta</button></div>';
+}
+function vSheet(){
+function it(a,icn,t,sub){return '<button class="prod" style="border:0;padding:10px 6px" data-a="'+a+'"><span class="tile" style="width:46px;height:46px">'+ic(icn,22,2)+'</span><span class="grow"><span class="name" style="display:block">'+t+'</span>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</span>'+ic('next',18,2.4)+'</button>';}
+return '<div class="shade" data-a="fechar"></div><div class="sheet" role="dialog" aria-label="Menu"><div class="row between" style="padding:0 6px 6px"><div class="sora" style="font-weight:700;font-size:18px">Menu</div><button class="round" aria-label="Fechar menu" data-a="fechar">'+ic('x',18,2.4)+'</button></div>'
++it('menu','list','Cardápio')+it('fichas','ticket','Minhas fichas')+it('eventos','cal','Outros eventos',ev(S.evento).nome)+it('perfil','user','Meu perfil')+it('balcao','scan','Modo balcão','Para o atendente validar fichas')+it('sair','out','Sair da conta')+'</div>';
+}
 function ticketHtml(f){
-return '<button class="ticket" data-a="abrir" data-v="'+f.codigo+'"'+(f.usada?' disabled':'')+'><span class="stub'+(f.usada?' used':'')+'">'+ic(prod(f.prod).icon,30,1.8)+'</span><span class="dash"></span><span class="grow" style="padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center"><span class="name" style="font-weight:700">'+prod(f.prod).nome+'</span><span class="sub">Ficha '+f.codigo+'</span>'
+return '<button class="ticket" data-a="abrir" data-v="'+f.codigo+'"'+(f.usada?' disabled':'')+'><span class="stub'+(f.usada?' used':'')+'">'+ic(prod(f.prod).icon,30,1.8)+'</span><span class="dash"></span><span class="grow" style="padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center"><span class="name" style="font-weight:700">'+prod(f.prod).nome+'</span><span class="sub">Ficha '+f.codigo+'</span><span class="sub">'+ev(f.ev).nome+'</span>'
 +(f.usada?'<span class="usedc">Já retirada</span>':'<span class="okc row" style="gap:6px">'+ic('check',14,3)+'Pronta para retirar</span>')+'</span>'+(f.usada?'':'<span class="row" style="padding-right:14px">'+ic('next',20,2.4)+'</span>')+'</button>';
 }
 function vFichas(){
@@ -296,14 +324,20 @@ S.codigo='';render();
 
 function render(){
 if(!S.user)S.view='login';
-var v={login:vLogin,menu:vMenu,item:vItem,pedido:vPedido,pix:vPix,fichas:vFichas,ficha:vFicha,balcao:vBalcao}[S.view]();
-app.innerHTML='<div class="demo">Versão de demonstração · pagamento simulado · dados salvos só neste aparelho</div>'+v;
+var v={login:vLogin,eventos:vEventos,perfil:vPerfil,menu:vMenu,item:vItem,pedido:vPedido,pix:vPix,fichas:vFichas,ficha:vFicha,balcao:vBalcao}[S.view]();
+app.innerHTML='<div class="demo">Versão de demonstração · pagamento simulado · dados salvos só neste aparelho</div>'+v+(S.sheet&&S.user?vSheet():'');
 if(S.view==='ficha'&&document.getElementById('qrbox')){tickQr();if(!timer)timer=setInterval(tickQr,500);}
 }
 
 app.addEventListener('click',function(e){
 var b=e.target.closest('[data-a]');if(!b)return;var a=b.getAttribute('data-a'),v=b.getAttribute('data-v');
-if(a==='auth'){S.auth=v;S.erro='';render();}
+S.sheet=false;
+if(a==='sheet'){S.sheet=true;render();}
+else if(a==='fechar'){render();}
+else if(a==='eventos')go('eventos');
+else if(a==='perfil')go('perfil');
+else if(a==='evento'){S.evento=v;save();go('menu');}
+else if(a==='auth'){S.auth=v;S.erro='';render();}
 else if(a==='sair'){S.user=null;S.auth='entrar';save();go('login');}
 else if(a==='menu')go('menu',{leitura:null});
 else if(a==='fichas')go('fichas');
@@ -315,7 +349,7 @@ else if(a==='add'){S.cart[S.item]=(S.cart[S.item]||0)+S.qtd;save();go('menu');}
 else if(a==='pedido')go('pedido');
 else if(a==='rem'){delete S.cart[v];save();render();}
 else if(a==='pagar')go('pix');
-else if(a==='aprovar'){for(var k in S.cart)for(var i=0;i<S.cart[k];i++)S.fichas.unshift({codigo:novoCodigo(),prod:k,usada:false});S.cart={};save();go('fichas',{aba:'disp'});}
+else if(a==='aprovar'){for(var k in S.cart)for(var i=0;i<S.cart[k];i++)S.fichas.unshift({codigo:novoCodigo(),prod:k,usada:false,ev:S.evento});S.cart={};save();go('fichas',{aba:'disp'});}
 else if(a==='aba'){S.aba=v;render();}
 else if(a==='abrir')go('ficha',{ficha:v});
 else if(a==='balcao')go('balcao',{leitura:null,codigo:''});
