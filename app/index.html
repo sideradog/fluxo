@@ -221,20 +221,34 @@ h+='<form id="authform" novalidate>';
 if(criar)h+='<label class="lbl">Nome<input class="inp" id="f-nome" type="text" autocomplete="name" placeholder="Como quer ser chamado"></label>';
 h+='<label class="lbl">CPF<input class="inp" id="f-cpf" type="text" inputmode="numeric" autocomplete="username" placeholder="000.000.000-00"></label>';
 if(criar)h+='<label class="lbl">Celular<input class="inp" id="f-cel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000"></label>';
-h+='<label class="lbl">Senha<input class="inp" id="f-senha" type="password" autocomplete="'+(criar?'new-password':'current-password')+'" placeholder="'+(criar?'Mínimo de 6 caracteres':'Sua senha')+'"></label>';
+h+='<label class="lbl">Senha<input class="inp" id="f-senha" type="password" autocomplete="'+(criar?'new-password':'current-password')+'" placeholder="'+(criar?'Crie uma senha forte':'Sua senha')+'"></label>';
+if(criar)h+='<div class="sub" style="margin-top:-6px">A senha precisa ter 8 caracteres ou mais, com letra maiúscula, letra minúscula, número e símbolo (@ # ! %).</div>';
 h+='<button class="cta center navy" type="submit">'+(criar?'Criar conta':'Entrar')+'</button></form>';
 h+='<div style="text-align:center;font-size:15px;color:var(--muted)">'+(criar?'Já tem conta?':'Ainda não tem conta?')+' <button class="linkbtn" data-a="auth" data-v="'+(criar?'entrar':'criar')+'">'+(criar?'Entrar':'Criar conta')+'</button></div>';
 h+='<div class="sub" style="text-align:center;margin-top:auto">Nesta demonstração a conta fica salva só neste aparelho. A senha é guardada embaralhada, nunca em texto.</div></div>';
 return h;
 }
 function cyrb(s){var h1=0xdeadbeef,h2=0x41c6ce57;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);}
+function cpfValido(c){
+if(!/^\d{11}$/.test(c)||/^(\d)\1{10}$/.test(c))return false;
+for(var t=9;t<11;t++){var d=0;for(var i=0;i<t;i++)d+=(+c.charAt(i))*(t+1-i);d=(d*10)%11%10;if(d!==+c.charAt(t))return false;}
+return true;}
+function senhaFraca(p){
+if(p.length<8)return 'A senha precisa ter pelo menos 8 caracteres.';
+if(!/[A-ZÀ-Ý]/.test(p))return 'A senha precisa ter pelo menos 1 letra maiúscula.';
+if(!/[a-zà-ÿ]/.test(p))return 'A senha precisa ter pelo menos 1 letra minúscula.';
+if(!/\d/.test(p))return 'A senha precisa ter pelo menos 1 número.';
+if(!/[^A-Za-zÀ-ÿ0-9\s]/.test(p))return 'A senha precisa ter pelo menos 1 símbolo, como @ # ! ou %.';
+return '';}
 function autenticar(){
 var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
 var criar=S.auth==='criar',cpf=g('f-cpf').replace(/\D/g,''),senha=g('f-senha'),nome=g('f-nome').replace(/\s+/g,' ');
 if(criar&&nome.length<2){S.erro='Digite seu nome.';return render();}
 if(cpf.length!==11){S.erro='Digite um CPF com 11 números.';return render();}
+if(cpf!=='11111111111'&&!cpfValido(cpf)){S.erro='Este CPF não é válido. Confira os números.';return render();}
 if(criar&&g('f-cel').replace(/\D/g,'').length<10){S.erro='Digite um celular com DDD.';return render();}
-if(senha.length<6){S.erro='A senha precisa ter pelo menos 6 caracteres.';return render();}
+if(criar){var fs=senhaFraca(senha);if(fs){S.erro=fs;return render();}}
+else if(!senha){S.erro='Digite a sua senha.';return render();}
 if(cpf==='11111111111'){
 if(criar){S.erro='Este CPF já tem conta. Toque em Entrar.';return render();}
 if(cyrb(cpf+':'+senha)!==118782819781992){S.erro='Senha incorreta.';return render();}
