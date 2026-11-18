@@ -163,7 +163,7 @@ function ic(n,s,w){return '<svg aria-hidden="true" width="'+(s||20)+'" height="'
 var EVENTOS=[
 {id:'e1',nome:'White Party',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'WP',cor:'#E9EEF8',tx:'#0A1F4D'},
 {id:'e2',nome:'American Pie',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'AP',cor:'#B3261E',tx:'#FFFFFF'},
-{id:'e3',nome:'Traffic Night',quando:'[DATA E HORA]',onde:'Assis',sig:'TN',cor:'#0A1F4D',tx:'#FFD23F',banner:'img/traffic-night.jpg',org:'CBA Eventos',local:'Santa Felicidade, Assis - SP',insta:'',lote:'Lote promocional',preco:25,desc:'A última festa do ano da CBA Eventos e a despedida do Santa Felicidade, com 4 atrações.\n\nTraffic Night: você não vai querer ficar de fora!\n\nComo funciona: escolha a sua cor e entre no clima da festa.\nVerde: solteiros\nAmarelo: enrolados\nVermelho: compromissados'}
+{id:'e3',nome:'Traffic Night',quando:'[DATA E HORA]',onde:'Assis',sig:'TN',cor:'#0A1F4D',tx:'#FFD23F',banner:'img/traffic-night.jpg',org:'CBA Eventos',local:'Santa Felicidade, Assis - SP',insta:'https://www.instagram.com/_cba_eventos',lote:'Lote promocional',preco:25,desc:"🚦 TRAFFIC NIGHT – A ÚLTIMA DO ANO! 🚦\nA CBA EVENTOS prepara uma noite mais que especial para fechar o ano com chave de ouro! A Traffic Night será nossa última festa de 2026 e também nossa despedida do Santa Felicidade, um lugar que fez parte de tantos momentos e histórias inesquecíveis.\nSerão 4 atrações, muita música e uma temática que promete marcar a noite!\n🟢 SOLTEIROS: verde\n🟡 ENROLADOS: amarelo\n🔴 COMPROMISSADOS: vermelho\nUma tradição antiga está de volta à cidade de Assis! Uma festa que marcou gerações e que retorna para despertar lembranças, reviver histórias e criar novas memórias.\nÉ hora de reunir os amigos, entrar na brincadeira e viver mais uma noite inesquecível com a CBA!\n❤️ Nossa última festa do ano. Nossa despedida do Santa Felicidade. Uma noite para entrar para a história!\nTRAFFIC NIGHT – VOCÊ NÃO VAI QUERER FICAR DE FORA! 🚦"}
 ];
 function ev(id){var base=EVENTOS[0];for(var i=0;i<EVENTOS.length;i++)if(EVENTOS[i].id===id)base=EVENTOS[i];var o=(S.evEdits||{})[base.id]||{},r={};for(var k in base)r[k]=base[k];for(var k2 in o)r[k2]=o[k2];return r;}
 function thumb(e,cls){return e.banner?'<span class="'+cls+'" style="background:#0A1F4D;padding:0;overflow:hidden"><img src="'+e.banner+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span>':'<span class="'+cls+' sora" style="background:'+e.cor+';color:'+e.tx+'">'+esc(e.sig)+'</span>';}
@@ -318,8 +318,11 @@ function vEvento(){
 var e=ev(S.evSel),on=e.id===S.evento;
 var CORES={verde:'#2EE08A',amarelo:'#FFD23F',vermelho:'#FF5A5A',azul:'#5B9BFF',branco:'#FFFFFF',rosa:'#FF7EB6',roxo:'#B48CFF',laranja:'#FF9D42',preto:'#111111'};
 var paras=[],regras=[];
-String(e.desc||'').split(/\n/).forEach(function(l){l=l.trim();if(!l)return;var m=l.match(/^([^:]{2,22}):\s*(.+)$/);
-if(m&&CORES[m[1].toLowerCase()])regras.push({k:m[1],v:m[2],c:CORES[m[1].toLowerCase()]});else paras.push(l);});
+function limpa(t){return t.replace(/^[^A-Za-zÀ-ÿ0-9]+/,'').trim();}
+function cap(t){t=limpa(t);return t===t.toUpperCase()?t.charAt(0)+t.slice(1).toLowerCase():t;}
+String(e.desc||'').split(/\n/).forEach(function(l){l=l.trim();if(!l)return;var m=l.match(/^([^:]{2,30}):\s*(.{1,40})$/),r=null;
+if(m){var k=limpa(m[1]).toLowerCase(),v=limpa(m[2]).toLowerCase();if(CORES[k])r={k:cap(m[2]),v:cap(m[1]),c:CORES[k]};else if(CORES[v])r={k:cap(m[1]),v:cap(m[2]),c:CORES[v]};}
+if(r)regras.push(r);else paras.push(l);});
 var h='<div class="evpage"><div class="evhero" style="background:'+e.cor+'">'
 +(e.banner?'<img src="'+e.banner+'" alt="Banner de '+esc(e.nome)+'">':'<span class="sora" style="color:'+e.tx+'" aria-hidden="true">'+esc(e.sig)+'</span>')
 +'<i></i><button class="round" aria-label="Voltar para os eventos" data-a="eventos" style="position:absolute;left:16px;top:16px;border:0">'+ic('back',20,2.4)+'</button>'
