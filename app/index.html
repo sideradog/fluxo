@@ -442,7 +442,18 @@ return '<svg role="img" aria-label="QR ilustrativo da ficha" width="220" height=
 
 var app=document.getElementById('app');
 var timer=null;
-function go(v,extra){go0(v,extra);if(S.user&&(v==='fichas'||v==='ficha'||v==='perfil'))refrescarFichas();}
+function chamarPgto(body){return sb.functions.invoke('pagamento',{body:body}).then(function(r){if(r.error){var c=r.error.context;if(c&&c.json)return c.json().then(function(j){throw (j&&j.erro)||'Erro no pagamento.';},function(x){throw typeof x==='string'?x:'Erro no pagamento.';});throw 'Sem conexão com o servidor. Tente de novo.';}return r.data;});}
+function tratarStatus(d){var st=d&&d.status&&S.pgto?d.status[S.pgto.id]:null;if(st==='pago'){pararPoll();S.pgto=null;S.cart={};S.erroPag='';save();go('fichas',{aba:'disp'});}else if(st==='falhou'){pararPoll();S.erroPag='O pagamento não foi aprovado. Tente de novo.';S.pgto=null;go('pedido');}else if(S.view==='pix')render();}
+var poll=null;function pararPoll(){if(poll){clearInterval(poll);poll=null;}}
+function iniciarPoll(){pararPoll();poll=setInterval(function(){if(S.view!=='pix'||!S.pgto)return pararPoll();chamarPgto({acao:'status',ids:[S.pgto.id]}).then(tratarStatus,function(){});},4000);}
+function pagar(b){if(S.ocupado||!cartCount())return;var cartao=null;
+if(S.pag==='cartao'){var g=function(id){var el=document.getElementById(id);return el?el.value.trim():'';};cartao={nome:g('cc-nome'),numero:g('cc-num').replace(/\D/g,''),validade:g('cc-val'),cvv:g('cc-cvv'),cep:g('cc-cep').replace(/\D/g,''),numeroEnd:g('cc-nend')};
+var e='';if(!cartao.nome)e='Informe o nome impresso no cartão.';else if(cartao.numero.length<13)e='Confira o número do cartão.';else if(!/^(0[1-9]|1[0-2])\/\d{2}$/.test(cartao.validade))e='Validade no formato MM/AA.';else if(!/^\d{3,4}$/.test(cartao.cvv))e='Confira o CVV.';else if(cartao.cep.length!==8)e='Confira o CEP.';else if(!cartao.numeroEnd)e='Informe o número do endereço.';
+if(e){S.erroPag=e;var box=document.querySelector('.err');if(box)box.textContent=e;else{var bd=document.querySelectorAll('.body');if(bd.length)bd[bd.length-1].insertAdjacentHTML('beforeend','<div class="err" role="alert">'+esc(e)+'</div>');}return;}}
+S.ocupado=true;S.erroPag='';b.disabled=true;b.textContent='Processando...';
+chamarPgto({acao:'criar',metodo:S.pag,evento:S.evento,itens:S.cart,cartao:cartao}).then(function(d){S.ocupado=false;S.copiado=false;S.pgto={id:d.id,total:d.total,pix:d.pix||null,sandbox:!!d.sandbox};if(d.status==='pago'){var o={};o[d.id]='pago';return tratarStatus({status:o});}if(d.status==='falhou'){S.pgto=null;S.erroPag='O pagamento não foi aprovado. Confira os dados do cartão.';return render();}go('pix');iniciarPoll();},function(m){S.ocupado=false;S.erroPag=String(m);render();});}
+function conferirPendentes(){if(!sb||!S.user)return;chamarPgto({acao:'status'}).then(function(d){var n=0;for(var k in (d&&d.status)||{})if(d.status[k]==='pago')n++;if(n)refrescarFichas();},function(){});}
+function go(v,extra){go0(v,extra);if(S.user&&(v==='fichas'||v==='ficha'||v==='perfil'))refrescarFichas();if(S.user&&v==='fichas')conferirPendentes();}
 function go0(v,extra){if(v==='fichas'||v==='perfil'){if(['eventos','menu','evento'].indexOf(S.view)>=0)S.volta=S.view;else if(S.view==='pix')S.volta='menu';}if(timer){clearInterval(timer);timer=null;}S.view=v;if(extra)for(var k in extra)S[k]=extra[k];render();window.scrollTo(0,0);}
 
 function vMenu(){
@@ -480,18 +491,24 @@ h+='<div class="hr"></div><div class="row between"><div style="font-weight:700;f
 h+='<fieldset style="border:0;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:10px"><legend class="sora" style="padding:0 0 10px;font-weight:700;font-size:16px">Como você quer pagar?</legend>'
 +'<label class="pay'+(S.pag==='pix'?' on':'')+'"><span class="tile" style="width:44px;height:44px;border-radius:12px">'+ic('bolt',22)+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">Pix</span><span class="sub">Ficha liberada na hora</span></span><input type="radio" name="pag" value="pix"'+(S.pag==='pix'?' checked':'')+'></label>'
 +'<label class="pay'+(S.pag==='cartao'?' on':'')+'"><span class="tile" style="width:44px;height:44px;border-radius:12px">'+ic('can',22)+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">Cartão de crédito</span><span class="sub">Aprovação em segundos</span></span><input type="radio" name="pag" value="cartao"'+(S.pag==='cartao'?' checked':'')+'></label></fieldset>';
+if(S.pag==='cartao'){var cf=function(id,lab,ph,mx,tp){return '<label class="lbl">'+lab+'<input class="inp" id="'+id+'" type="text" inputmode="'+(tp||'text')+'" maxlength="'+mx+'" placeholder="'+ph+'" autocomplete="off"></label>';};
+h+='<div class="box" style="display:flex;flex-direction:column;gap:12px">'+cf('cc-nome','Nome impresso no cartão','Como está no cartão',60)+cf('cc-num','Número do cartão','0000 0000 0000 0000',23,'numeric')+'<div class="row" style="gap:12px"><div class="grow">'+cf('cc-val','Validade','MM/AA',5,'numeric')+'</div><div class="grow">'+cf('cc-cvv','CVV','123',4,'numeric')+'</div></div><div class="row" style="gap:12px"><div class="grow">'+cf('cc-cep','CEP do titular','00000-000',9,'numeric')+'</div><div class="grow">'+cf('cc-nend','Nº do endereço','123',10)+'</div></div><div class="sub">O cartão precisa estar no seu CPF. Os dados vão direto para o processador de pagamento e não ficam salvos no Fluxo.</div></div>';}
+if(S.erroPag)h+='<div class="err" role="alert">'+esc(S.erroPag)+'</div>';
 h+='</div><div class="foot"><button class="cta center" data-a="pagar">Pagar '+brl(cartTotal())+'</button></div>';
 return h;
 }
 
 function vPix(){
-var tipo=S.pag==='pix'?'Pague com Pix':'Pagamento com cartão';
-return '<div class="head"><button class="round" aria-label="Voltar ao pedido" data-a="pedido">'+ic('back',20,2.4)+'</button><h1>'+tipo+'</h1></div><div class="body">'
-+'<div class="box" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 20px"><div style="text-align:center"><div class="eyebrow">Total a pagar</div><div class="sora" style="font-weight:800;font-size:32px">'+brl(cartTotal())+'</div></div>'
-+(S.pag==='pix'?'<div style="padding:12px;border-radius:18px;border:2px solid var(--navy)">'+qrSvg('pix'+cartTotal())+'</div>':'')
-+'<div class="sub" style="text-align:center">Pagamento simulado. Nesta versão de demonstração nenhum valor é cobrado.</div></div>'
-+'<div class="note"><span class="spin"></span><span><b>Aguardando pagamento</b>No app real, as fichas aparecem sozinhas quando o pagamento é confirmado.</span></div>'
-+(S.erroPag?'<div class="err" role="alert">'+esc(S.erroPag)+'</div>':'')+'</div><div class="foot"><button class="cta center" data-a="aprovar">Simular pagamento aprovado</button></div>';
+var pg=S.pgto||{},pix=S.pag==='pix';
+var h='<div class="head"><button class="round" aria-label="Voltar ao pedido" data-a="pedido">'+ic('back',20,2.4)+'</button><h1>'+(pix?'Pague com Pix':'Pagamento com cartão')+'</h1></div><div class="body">'
++'<div class="box" style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 20px"><div style="text-align:center"><div class="eyebrow">Total a pagar</div><div class="sora" style="font-weight:800;font-size:32px">'+brl(pg.total||0)+'</div></div>';
+if(pix&&pg.pix){h+='<img alt="QR Code Pix" style="width:220px;height:220px;border-radius:14px;border:2px solid var(--navy)" src="data:image/png;base64,'+pg.pix.imagem+'">'
++'<div class="sub" style="text-align:center">Abra o app do seu banco, escolha Pix e leia o código. Ou copie o código abaixo.</div>'
++'<button class="cta center line" style="height:50px" data-a="pix-copiar">'+(S.copiado?'Código copiado':'Copiar código Pix')+'</button>';}
+h+='</div><div class="note"><span class="spin"></span><span><b>Aguardando pagamento</b>Suas fichas aparecem sozinhas assim que o pagamento for confirmado. Pode deixar esta tela aberta.</span></div>'
++(S.erroPag?'<div class="err" role="alert">'+esc(S.erroPag)+'</div>':'')+'</div>';
+if(pg.sandbox)h+='<div class="foot"><button class="cta center" data-a="simular">Simular pagamento (modo de teste)</button></div>';
+return h;
 }
 
 function vEventos(){
@@ -769,9 +786,9 @@ else if(a==='mais'){if(S.qtd<20){S.qtd++;render();}}
 else if(a==='add'){S.cart[S.item]=(S.cart[S.item]||0)+S.qtd;save();go('menu');}
 else if(a==='pedido')go('pedido');
 else if(a==='rem'){delete S.cart[v];save();render();}
-else if(a==='pagar')go('pix');
-else if(a==='aprovar'){if(S.ocupado)return;var novas=[];for(var k in S.cart)for(var i=0;i<S.cart[k];i++)novas.push({codigo:novoCodigo(),prod:k,usada:false,ev:prod(k).ing?prod(k).ev:S.evento});if(!novas.length)return;S.ocupado=true;b.disabled=true;b.textContent='Registrando...';
-sb.from('fichas').insert(novas.map(function(f){return {codigo:f.codigo,produto:f.prod,evento_id:f.ev};})).then(function(r){S.ocupado=false;if(r.error){console.error(r.error);S.erroPag='Não foi possível registrar as fichas: '+r.error.message;return render();}S.erroPag='';S.fichas=novas.concat(S.fichas);S.cart={};save();go('fichas',{aba:'disp'});},function(e){S.ocupado=false;S.erroPag='Sem conexão com o servidor. Tente de novo.';render();});}
+else if(a==='pagar')pagar(b);
+else if(a==='pix-copiar'){var pl=S.pgto&&S.pgto.pix&&S.pgto.pix.payload;if(pl&&navigator.clipboard)navigator.clipboard.writeText(pl).then(function(){S.copiado=true;render();});}
+else if(a==='simular'){if(S.ocupado||!S.pgto)return;S.ocupado=true;b.disabled=true;b.textContent='Confirmando...';chamarPgto({acao:'simular',id:S.pgto.id}).then(function(d){S.ocupado=false;tratarStatus(d);},function(m){S.ocupado=false;S.erroPag=String(m);render();});}
 else if(a==='aba'){S.aba=v;render();}
 else if(a==='abrir')go('ficha',{ficha:v});
 else if(a==='balcao'){go('balcao',{leitura:null,codigo:'',aviso:''});verificarAcesso();}
