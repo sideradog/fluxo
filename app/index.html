@@ -198,12 +198,13 @@ var CATS=['Todos','Bebidas','Promoções','Combos','Mesas'];
 
 var KEY='fluxo-demo-v2';
 var S={view:'menu',cat:'Todos',busca:'',item:null,qtd:1,pag:'pix',cart:{},fichas:[],aba:'disp',ficha:null,leitura:null,codigo:'',evento:'e1',sheet:false,evEdits:{},evSel:null,draft:null,equipe:{},bev:null,ultCod:null,aviso:''};
-S.user=null;S.auth='entrar';S.erro='';S.carregando=true;S.comp={};S.eq={};S.ocupado=false;
+S.user=null;S.auth='entrar';S.erro='';S.info='';S.carregando=true;S.comp={};S.eq={};S.ocupado=false;
 try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){S.cart=sv.cart||{};S.evento=sv.evento||'e1';}}catch(e){}
 S.view='login';
 function save(){try{localStorage.setItem(KEY,JSON.stringify({cart:S.cart,evento:S.evento}));}catch(e){}}
 var SB_URL='https://rkbtopfabrtspceeyyyi.supabase.co',SB_KEY='sb_publishable_tzugTKfK8p7rW2UX-ISzow_jbGniG6I',EMAIL_DOM='@cpf.fluxo.app';
-var sb=null;try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'fluxo-auth'}});}catch(e){}
+var APP_URL=location.origin+location.pathname,VEIO_RECUP=/type=recovery/.test(location.hash);
+var sb=null;try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'fluxo-auth'}});sb.auth.onAuthStateChange(function(ev){if(ev==='PASSWORD_RECOVERY'){S.recuperando=true;S.auth='novasenha';S.user=null;S.carregando=false;S.erro='';S.info='';render();}});}catch(e){}
 function falha(msg,err){if(err)console.error(err);S.erro=msg+(err&&err.message?' ('+err.message+')':'');S.ocupado=false;render();}
 function mapFicha(f){return {codigo:f.codigo,prod:f.produto,ev:f.evento_id,usada:f.usada};}
 function carregarEventos(){if(!sb)return Promise.resolve();return sb.from('eventos').select('id,dados').then(function(r){if(r.error){console.error(r.error);return;}S.evEdits={};(r.data||[]).forEach(function(x){S.evEdits[x.id]=x.dados||{};});});}
@@ -215,9 +216,10 @@ sb.from('equipe').select('evento_id').eq('usuario_id',uid),
 carregarEventos()
 ]).then(function(rs){
 var p=rs[0];if(p.error||!p.data)throw p.error||new Error('perfil não encontrado');
-var d=p.data;S.user={uid:d.id,id:d.codigo,nome:d.nome,admin:!!d.admin,cpfFim:String(d.cpf||'').slice(9),balcao:{}};if(d.foto)S.user.foto=d.foto;
+var d=p.data;S.user={uid:d.id,id:d.codigo,nome:d.nome,admin:!!d.admin,cpfFim:String(d.cpf||'').slice(9),balcao:{},email:''};if(d.foto)S.user.foto=d.foto;
 S.fichas=(rs[1].data||[]).map(mapFicha);
 (rs[2].data||[]).forEach(function(x){S.user.balcao[x.evento_id]=true;});
+return sb.auth.getUser().then(function(u){S.user.email=u&&u.data&&u.data.user&&u.data.user.email||'';});
 });
 }
 function refrescarFichas(){if(!sb||!S.user)return;sb.from('fichas').select('codigo,produto,evento_id,usada').eq('usuario_id',S.user.uid).order('criado_em',{ascending:false}).then(function(r){if(r.error)return;S.fichas=(r.data||[]).map(mapFicha);if(['fichas','ficha','perfil'].indexOf(S.view)>=0)render();});}
@@ -227,6 +229,7 @@ function carregarEquipe(id){if(!sb||!isAdmin())return;sb.from('equipe').select('
 function iniciar(){
 if(!sb){S.carregando=false;S.erro='Não foi possível carregar o sistema de contas. Confira a internet e recarregue a página.';return render();}
 carregarEventos().then(function(){return sb.auth.getSession();}).then(function(r){var ss=r&&r.data&&r.data.session;
+if(VEIO_RECUP||S.recuperando){S.carregando=false;S.recuperando=true;S.auth='novasenha';S.view='login';return render();}
 if(!ss){S.carregando=false;S.view='login';return render();}
 return carregarConta(ss.user.id).then(function(){S.carregando=false;S.view='eventos';render();});
 }).catch(function(e){S.carregando=false;S.user=null;S.view='login';falha('Não foi possível carregar a sua conta.',e);});
@@ -234,17 +237,28 @@ return carregarConta(ss.user.id).then(function(){S.carregando=false;S.view='even
 function maskCpf(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1-$2');}
 function maskCel(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');}
 function vLogin(){
-var criar=S.auth==='criar';
-var h='<div class="login"><img src="logo.png" alt="Fluxo. Seu bar. Sem filas."><h1>'+(criar?'Crie sua conta':'Entre para pedir sem fila')+'</h1>';
+var m=S.auth,criar=m==='criar';
+var tit={entrar:'Entre para pedir sem fila',criar:'Crie sua conta',recuperar:'Recuperar senha',novasenha:'Crie uma nova senha'}[m]||'Entrar';
+var h='<div class="login"><img src="logo.png" alt="Fluxo. Seu bar. Sem filas."><h1>'+tit+'</h1>';
 if(S.erro)h+='<div class="err" role="alert">'+esc(S.erro)+'</div>';
+if(S.info)h+='<div class="note" role="status" style="background:#DDF3E7;color:var(--ok)"><span>'+esc(S.info)+'</span></div>';
+var regra='<div class="sub" style="margin-top:-6px">A senha precisa ter 8 caracteres ou mais, com letra maiúscula, letra minúscula, número e símbolo (@ # ! %).</div>';
 h+='<form id="authform" novalidate>';
-if(criar)h+='<label class="lbl">Nome<input class="inp" id="f-nome" type="text" autocomplete="name" placeholder="Como quer ser chamado"></label>';
-h+='<label class="lbl">CPF<input class="inp" id="f-cpf" type="text" inputmode="numeric" autocomplete="username" placeholder="000.000.000-00"></label>';
+if(m==='recuperar'){
+h+='<label class="lbl">E-mail da conta<input class="inp" id="f-email" type="email" autocomplete="email" placeholder="voce@email.com"></label><button class="cta center navy" type="submit">Enviar link de recuperação</button></form>';
+h+='<div style="text-align:center"><button class="linkbtn" data-a="auth" data-v="entrar">Voltar para o login</button></div>';
+}else if(m==='novasenha'){
+h+='<label class="lbl">Nova senha<input class="inp" id="f-senha" type="password" autocomplete="new-password"></label>'+regra+'<label class="lbl">Repita a nova senha<input class="inp" id="f-senha2" type="password" autocomplete="new-password"></label><button class="cta center navy" type="submit">Salvar nova senha</button></form>';
+}else{
+if(criar)h+='<label class="lbl">Nome<input class="inp" id="f-nome" type="text" autocomplete="name" placeholder="Como quer ser chamado"></label><label class="lbl">CPF<input class="inp" id="f-cpf" type="text" inputmode="numeric" autocomplete="off" placeholder="000.000.000-00"></label>';
+h+='<label class="lbl">E-mail<input class="inp" id="f-email" type="email" autocomplete="'+(criar?'email':'username')+'" placeholder="voce@email.com"></label>';
 if(criar)h+='<label class="lbl">Celular<input class="inp" id="f-cel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000"></label>';
 h+='<label class="lbl">Senha<input class="inp" id="f-senha" type="password" autocomplete="'+(criar?'new-password':'current-password')+'" placeholder="'+(criar?'Crie uma senha forte':'Sua senha')+'"></label>';
-if(criar)h+='<div class="sub" style="margin-top:-6px">A senha precisa ter 8 caracteres ou mais, com letra maiúscula, letra minúscula, número e símbolo (@ # ! %).</div>';
+if(criar)h+=regra+'<label class="lbl">Repita a senha<input class="inp" id="f-senha2" type="password" autocomplete="new-password"></label><div class="sub">Cada CPF pode ter uma única conta, ligada a um único e-mail.</div>';
 h+='<button class="cta center navy" type="submit">'+(criar?'Criar conta':'Entrar')+'</button></form>';
+if(!criar)h+='<div style="text-align:center"><button class="linkbtn" data-a="auth" data-v="recuperar">Esqueci minha senha</button></div>';
 h+='<div style="text-align:center;font-size:15px;color:var(--muted)">'+(criar?'Já tem conta?':'Ainda não tem conta?')+' <button class="linkbtn" data-a="auth" data-v="'+(criar?'entrar':'criar')+'">'+(criar?'Entrar':'Criar conta')+'</button></div>';
+}
 h+='<div class="sub" style="text-align:center;margin-top:auto">A sua conta fica salva no servidor do Fluxo e funciona em qualquer aparelho.</div></div>';
 return h;
 }
@@ -260,32 +274,54 @@ if(!/[a-zà-ÿ]/.test(p))return 'A senha precisa ter pelo menos 1 letra minúscu
 if(!/\d/.test(p))return 'A senha precisa ter pelo menos 1 número.';
 if(!/[^A-Za-zÀ-ÿ0-9\s]/.test(p))return 'A senha precisa ter pelo menos 1 símbolo, como @ # ! ou %.';
 return '';}
+function emailOk(e){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);}
 function autenticar(){
 if(S.ocupado)return;
 var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
-var criar=S.auth==='criar',cpf=g('f-cpf').replace(/\D/g,''),senha=g('f-senha'),nome=g('f-nome').replace(/\s+/g,' '),cel=g('f-cel');
-if(criar&&nome.length<2){S.erro='Digite seu nome.';return render();}
-if(cpf.length!==11){S.erro='Digite um CPF com 11 números.';return render();}
-if(cpf!=='11111111111'&&!cpfValido(cpf)){S.erro='Este CPF não é válido. Confira os números.';return render();}
-if(criar&&cel.replace(/\D/g,'').length<10){S.erro='Digite um celular com DDD.';return render();}
-if(criar){var fs=senhaFraca(senha);if(fs){S.erro=fs;return render();}}
-else if(!senha){S.erro='Digite a sua senha.';return render();}
+var m=S.auth,criar=m==='criar',email=g('f-email').toLowerCase(),senha=(document.getElementById('f-senha')||{}).value||'',senha2=(document.getElementById('f-senha2')||{}).value||'';
+S.info='';
 if(!sb)return falha('Sem conexão com o servidor. Recarregue a página.');
-S.ocupado=true;var bt=document.querySelector('#authform button[type=submit]');if(bt){bt.disabled=true;bt.textContent='Aguarde...';}
-var email=cpf+EMAIL_DOM;
-function depois(uid){return carregarConta(uid).then(function(){S.ocupado=false;S.erro='';go('eventos');}).catch(function(e){falha('Você entrou, mas o perfil não carregou.',e);});}
+function trava(t){S.ocupado=true;var bt=document.querySelector('#authform button[type=submit]');if(bt){bt.disabled=true;bt.textContent=t||'Aguarde...';}}
+function depois(uid){return carregarConta(uid).then(function(){S.ocupado=false;S.erro='';S.info='';go('eventos');}).catch(function(e){falha('Você entrou, mas o perfil não carregou.',e);});}
+if(m==='recuperar'){
+if(!emailOk(email)){S.erro='Digite um e-mail válido.';return render();}
+trava('Enviando...');
+return sb.auth.resetPasswordForEmail(email,{redirectTo:APP_URL}).then(function(r){S.ocupado=false;if(r.error)return falha('Não foi possível enviar o link.',r.error);S.erro='';S.info='Se existir uma conta com '+email+', enviamos um link para criar uma nova senha. Confira também o spam.';S.auth='entrar';render();},function(e){falha('Sem conexão com o servidor.',e);});
+}
+if(m==='novasenha'){
+var fs=senhaFraca(senha);if(fs){S.erro=fs;return render();}
+if(senha!==senha2){S.erro='As duas senhas não são iguais.';return render();}
+trava('Salvando...');
+return sb.auth.updateUser({password:senha}).then(function(r){if(r.error)return falha('Não foi possível salvar a nova senha.',r.error);S.recuperando=false;S.auth='entrar';try{history.replaceState(null,'',location.pathname);}catch(x){}return depois(r.data.user.id);},function(e){falha('Sem conexão com o servidor.',e);});
+}
+if(!emailOk(email)){S.erro='Digite um e-mail válido.';return render();}
 if(criar){
-sb.auth.signUp({email:email,password:senha,options:{data:{nome:nome.slice(0,60),celular:cel.slice(0,20)}}}).then(function(r){
-if(r.error){if(/already|registered|exists/i.test(r.error.message||''))return falha('Este CPF já tem conta. Toque em Entrar.');return falha('Não foi possível criar a conta.',r.error);}
-if(!r.data||!r.data.session)return falha('A conta foi criada, mas o login automático está bloqueado. Falta desligar a confirmação de e-mail no Supabase.');
+var nome=g('f-nome').replace(/\s+/g,' '),cpf=g('f-cpf').replace(/\D/g,''),cel=g('f-cel');
+if(nome.length<2){S.erro='Digite seu nome.';return render();}
+if(!cpfValido(cpf)){S.erro='Este CPF não é válido. Confira os números.';return render();}
+if(cel.replace(/\D/g,'').length<10){S.erro='Digite um celular com DDD.';return render();}
+var fs2=senhaFraca(senha);if(fs2){S.erro=fs2;return render();}
+if(senha!==senha2){S.erro='As duas senhas não são iguais.';return render();}
+trava();
+return sb.auth.signUp({email:email,password:senha,options:{emailRedirectTo:APP_URL,data:{nome:nome.slice(0,60),cpf:cpf,celular:cel.slice(0,20)}}}).then(function(r){
+if(r.error){var msg=r.error.message||'';
+if(/already|registered|exists/i.test(msg))return falha('Este e-mail já tem conta. Toque em Entrar.');
+if(/database error/i.test(msg))return falha('Não foi possível criar a conta. Este CPF já pode estar ligado a outra conta. Se for o seu, entre com o e-mail dela ou use Esqueci minha senha.');
+if(/invalid/i.test(msg)&&/email/i.test(msg))return falha('Este e-mail não foi aceito. Confira se está certo.');
+return falha('Não foi possível criar a conta.',r.error);}
+if(!r.data||!r.data.session){S.ocupado=false;S.erro='';S.auth='entrar';S.info='Conta criada. Enviamos um link de confirmação para '+email+'. Abra o e-mail, toque no link e depois entre aqui.';return render();}
 return depois(r.data.session.user.id);
 },function(e){falha('Sem conexão com o servidor.',e);});
-}else{
+}
+if(!senha){S.erro='Digite a sua senha.';return render();}
+trava();
 sb.auth.signInWithPassword({email:email,password:senha}).then(function(r){
-if(r.error){if(/invalid|credentials/i.test(r.error.message||''))return falha('CPF ou senha incorretos.');return falha('Não foi possível entrar.',r.error);}
+if(r.error){var msg=r.error.message||'';
+if(/not confirmed/i.test(msg))return falha('Seu e-mail ainda não foi confirmado. Abra o link que enviamos para '+email+'.');
+if(/invalid|credentials/i.test(msg))return falha('E-mail ou senha incorretos.');
+return falha('Não foi possível entrar.',r.error);}
 return depois(r.data.user.id);
 },function(e){falha('Sem conexão com o servidor.',e);});
-}
 }
 
 function pic(p,s,w){return p.img?'<img src="'+p.img+'" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">':ic(p.icon,s,w);}
@@ -471,7 +507,7 @@ c.getContext('2d').drawImage(im,(im.width-d)/2,(im.height-d)/2,d,d,0,0,240,240);
 function vPerfil(){
 var d=S.fichas.filter(function(f){return !f.usada;}).length,u=S.fichas.length-d,n=S.user?S.user.nome:'cliente';
 return '<div class="head"><button class="round" aria-label="Voltar" data-a="voltar">'+ic('back',20,2.4)+'</button><h1>Meu perfil</h1></div><div class="body">'
-+'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+(S.user&&S.user.cpfFim?' · CPF ***.***.***-'+esc(S.user.cpfFim):'')+'</div></div></div>'
++'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+(S.user&&S.user.cpfFim?' · CPF ***.***.***-'+esc(S.user.cpfFim):'')+'</div>'+(S.user&&S.user.email?'<div class="sub">'+esc(S.user.email)+'</div>':'')+'</div></div>'
 +'<div class="row" style="gap:10px;flex-wrap:wrap"><label class="pill" for="pf-foto" style="border:1px solid var(--line2);cursor:pointer">'+ic('user',18)+(S.user&&S.user.foto?'Trocar foto':'Escolher foto')+'</label><input id="pf-foto" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0">'+(S.user&&S.user.foto?'<button class="linkbtn" data-a="foto-rem">Remover foto</button>':'')+'</div></div>'
 +'<div class="box row between" style="gap:12px"><div><div class="eyebrow">Meu ID de usuário</div><div class="code" style="margin-top:4px">'+meuId()+'</div></div><button class="pill" style="border:1px solid var(--line2)" data-a="copiar" data-v="'+esc(meuId())+'">Copiar</button></div>'
 +'<div class="row" style="gap:12px"><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+d+'</div><div class="sub">fichas disponíveis</div></div><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+u+'</div><div class="sub">fichas usadas</div></div></div>'
@@ -585,7 +621,7 @@ else if(a==='foto-rem'){if(S.user&&sb)sb.from('perfis').update({foto:null}).eq('
 else if(a==='ev-abrir'){go('evento',{evSel:v,draft:null,aviso:''});carregarCompradores(v);}
 else if(a==='ev-editar'){if(isAdmin())go('evedit',{evSel:v,draft:null});}
 else if(a==='ev-reset'){if(isAdmin()&&sb)sb.from('eventos').delete().eq('id',v).then(function(r){if(r.error){S.aviso='Não foi possível restaurar: '+r.error.message;return render();}delete S.evEdits[v];go('evento',{evSel:v,draft:null});});}
-else if(a==='auth'){S.auth=v;S.erro='';render();}
+else if(a==='auth'){S.auth=v;S.erro='';S.info='';render();}
 else if(a==='sair'){var fim=function(){S.user=null;S.cart={};S.fichas=[];S.auth='entrar';S.erro='';save();go('login');};if(sb)sb.auth.signOut().then(fim,fim);else fim();}
 else if(a==='menu')go('menu',{leitura:null});
 else if(a==='fichas')go('fichas');
