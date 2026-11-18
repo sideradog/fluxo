@@ -127,6 +127,12 @@ h1,h2,.sora{font-family:Sora,sans-serif}
 .evrow{display:flex;align-items:center;gap:16px;padding:14px 0;background:none;border:0;width:100%;text-align:left;color:inherit}
 .evthumb{width:84px;height:84px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;letter-spacing:1px;flex-shrink:0;border:1px solid var(--line)}
 .evchip{background:var(--tint);color:var(--navy);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+#scan{display:none;position:fixed;inset:0;z-index:60;background:#050C1E}
+.scanbox{max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column}
+.scanview{position:relative;flex:1;overflow:hidden;background:#000}
+.scanview video{width:100%;height:100%;object-fit:cover;display:block}
+.scanframe{position:absolute;left:50%;top:50%;width:64%;aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 2000px rgba(5,12,30,.45)}
+#qrbox svg{width:100%;height:auto;display:block}
 .shade{position:fixed;inset:0;background:rgba(10,31,77,.55);z-index:30}
 .sheet{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-radius:24px 24px 0 0;padding:18px 14px 22px;z-index:31;display:flex;flex-direction:column;gap:2px;max-height:85%;overflow:auto}
 .login{flex:1;background:#FEFEFE;display:flex;flex-direction:column;padding:8px 24px 28px;gap:18px}
@@ -145,6 +151,8 @@ h1,h2,.sora{font-family:Sora,sans-serif}
 <body>
 <div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
 (function(){
 var IC={
@@ -539,14 +547,38 @@ var f=S.fichas.filter(function(x){return x.codigo===S.ficha;})[0];
 if(!f||f.usada){return vFichas();}
 return '<div class="dark" style="flex:1;display:flex;flex-direction:column;gap:18px;padding:22px 20px"><div class="row between"><button class="round dark" aria-label="Voltar para minhas fichas" data-a="fichas">'+ic('back',20,2.4)+'</button><div class="brand" style="font-size:20px">FLUXO</div><span style="width:44px"></span></div>'
 +'<div style="text-align:center"><h1 style="margin:0;font-size:24px">'+(prod(f.prod).ing?'Mostre na entrada':'Mostre no balcão')+'</h1><div class="sub" style="font-size:14px;margin-top:6px">'+(prod(f.prod).ing?'A portaria lê o código e libera a sua entrada.':'O atendente lê o código e entrega seu pedido.')+'</div></div>'
-+'<div class="qr"><div class="eyebrow">Vale 1 retirada</div><div class="sora" style="font-weight:700;font-size:22px">'+prod(f.prod).nome+'</div><div id="qrbox"></div><div class="code">'+f.codigo+'</div><div class="bar"><i id="qrbar" style="width:100%"></i></div><div class="sub" style="text-align:center">Código renovado a cada 30 segundos (QR ilustrativo nesta demonstração).</div></div>'
++'<div class="qr"><div class="eyebrow">Vale 1 retirada</div><div class="sora" style="font-weight:700;font-size:22px">'+prod(f.prod).nome+'</div><div id="qrbox" style="width:230px;max-width:100%">'+qrReal(f.codigo)+'</div><div class="code">'+f.codigo+'</div><div class="sub" style="text-align:center;color:var(--muted)">Cada ficha vale uma vez só. Aumente o brilho da tela se a leitura demorar.</div></div>'
 +(podeBalcao(f.ev||'e1')?'<button class="pill ghost" style="align-self:center" data-a="balcao-com" data-v="'+f.codigo+'">'+ic('scan',18)+'Simular leitura no balcão</button>':'')+'</div>';
 }
-function tickQr(){
-var f=S.ficha,box=document.getElementById('qrbox'),bar=document.getElementById('qrbar');if(!box)return;
-var now=Date.now(),slot=Math.floor(now/30000);
-if(box.getAttribute('data-slot')!==String(slot)){box.innerHTML=qrSvg(f+slot);box.setAttribute('data-slot',slot);}
-bar.style.width=(100-((now%30000)/300))+'%';
+function tickQr(){}
+function qrReal(txt){try{var q=qrcode(0,'M');q.addData(txt);q.make();return q.createSvgTag({cellSize:6,margin:2,scalable:true});}catch(e){return '<div class="sub">Não foi possível desenhar o QR. Use o código abaixo.</div>';}}
+var SCAN={on:false,stream:null,t:0},scv=document.createElement('canvas'),scx=null;
+function abrirCamera(){
+S.camErro='';
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){S.camErro='Este navegador não libera a câmera. Digite o código da ficha.';return render();}
+var o=document.getElementById('scan');if(!o){o=document.createElement('div');o.id='scan';document.body.appendChild(o);}
+o.innerHTML='<div class="scanbox" role="dialog" aria-label="Leitor de QR"><div class="row between" style="padding:16px 18px;color:#fff"><b class="sora" style="font-size:17px">Aponte para o QR da ficha</b><button class="pill" id="scan-x">Fechar</button></div><div class="scanview"><video id="scan-v" playsinline muted autoplay></video><i class="scanframe"></i></div><div id="scan-msg" style="color:#C9D6F5;text-align:center;padding:16px;font-size:14px">Abrindo a câmera...</div></div>';
+o.style.display='block';
+document.getElementById('scan-x').onclick=function(){fecharCamera();S.modoCam=false;};
+navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(function(st){
+if(!document.getElementById('scan-v')){st.getTracks().forEach(function(t){t.stop();});return;}
+SCAN.stream=st;SCAN.on=true;var v=document.getElementById('scan-v');v.srcObject=st;var pr=v.play();if(pr&&pr.catch)pr.catch(function(){});
+var m=document.getElementById('scan-msg');if(m)m.textContent='Validando no balcão de '+ev(S.bev).nome;lerQuadro();
+},function(e){fecharCamera();S.modoCam=false;S.camErro=(e&&(e.name==='NotAllowedError'||e.name==='SecurityError'))?'O acesso à câmera foi negado. Libere a câmera para este site nas configurações do navegador e tente de novo.':'Não foi possível abrir a câmera deste aparelho. Digite o código da ficha.';render();});
+}
+function fecharCamera(){SCAN.on=false;clearTimeout(SCAN.t);if(SCAN.stream){SCAN.stream.getTracks().forEach(function(t){t.stop();});SCAN.stream=null;}var o=document.getElementById('scan');if(o){o.style.display='none';o.innerHTML='';}}
+function lerQuadro(){
+if(!SCAN.on)return;
+var v=document.getElementById('scan-v');
+if(v&&v.readyState>=2&&v.videoWidth&&window.jsQR){
+var k=Math.min(1,720/Math.max(v.videoWidth,v.videoHeight));scv.width=Math.round(v.videoWidth*k);scv.height=Math.round(v.videoHeight*k);
+scx=scx||scv.getContext('2d',{willReadFrequently:true});scx.drawImage(v,0,0,scv.width,scv.height);
+var img=scx.getImageData(0,0,scv.width,scv.height),r=jsQR(img.data,img.width,img.height,{inversionAttempts:'attemptBoth'});
+if(r&&r.data){var mm=String(r.data).toUpperCase().match(/FLX-[A-Z0-9]{4}-[A-Z0-9]{4}/);
+if(mm){try{if(navigator.vibrate)navigator.vibrate(80);}catch(x){}fecharCamera();S.modoCam=true;validar(mm[0]);return;}
+var msg=document.getElementById('scan-msg');if(msg)msg.textContent='Este QR não é uma ficha do Fluxo.';}
+}
+SCAN.t=setTimeout(lerQuadro,120);
 }
 
 function vEquipe(){
@@ -571,13 +603,14 @@ return h;}
 if(!S.bev||ids.indexOf(S.bev)<0)S.bev=ids.indexOf(S.evento)>=0?S.evento:ids[0];
 h+='<div><div class="eyebrow">Validando fichas de</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">'+esc(ev(S.bev).nome)+'</div></div>';
 if(ids.length>1){h+='<div class="chips" style="padding:0">'+ids.map(function(i){return '<button class="chip'+(i===S.bev?' on':'')+'" style="'+(i===S.bev?'background:#fff;color:var(--navy);border-color:#fff':'background:var(--navy2);color:#fff;border-color:var(--navy2)')+'" data-a="bev" data-v="'+i+'">'+esc(ev(i).nome)+'</button>';}).join('')+'</div>';}
-h+='<div class="sub" style="color:#C9D6F5">No app real a leitura é pela câmera. Aqui você digita o código da ficha.</div></div><div class="body" style="padding-top:20px">';
+h+='<div class="sub" style="color:#C9D6F5">Leia o QR da ficha com a câmera ou digite o código.</div></div><div class="body" style="padding-top:20px">';
 if(S.leitura){
 var L=S.leitura,T={usada:'Ficha já usada',outro:'Ficha de outro evento',inexistente:'Ficha não encontrada',sem_acesso:'Sem acesso a este balcão',erro:'Não foi possível validar'};
 if(L.ok)h+='<div class="result ok" role="status"><div class="round" style="width:84px;height:84px;border-radius:42px;border:0;color:var(--ok)">'+ic('check',44,3)+'</div><h2>Ficha válida</h2><div>'+(prod(L.prod).ing?'Libere a entrada: ':'Entregue: ')+'<b>1x '+esc(prod(L.prod).nome)+'</b></div><div style="font-size:13px">'+L.codigo+' · baixa registrada</div></div>';
 else h+='<div class="result bad" role="alert"><div class="round" style="width:84px;height:84px;border-radius:42px;border:0;color:var(--bad)">'+ic('x',44,3)+'</div><h2>'+T[L.motivo]+'</h2><div>'+(L.motivo==='outro'?'Esta ficha vale em '+esc(ev(L.ev).nome)+'.':L.motivo==='erro'?'Confira a internet e tente de novo.':L.motivo==='sem_acesso'?'Peça ao administrador para autorizar você.':'Não entregue o pedido.')+'</div><div style="font-size:13px">'+esc(L.codigo)+'</div></div>';
 h+='<button class="cta center navy" data-a="proxima">'+ic('scan',22)+'&nbsp; Ler próxima ficha</button>';
 }else{
+h+='<button class="cta center" style="height:64px;font-size:17px" data-a="camera">'+ic('scan',22)+'&nbsp; Ler QR com a câmera</button>'+(S.camErro?'<div class="err" role="alert">'+esc(S.camErro)+'</div>':'')+'<div class="sub" style="text-align:center">Ou digite o código</div>';
 h+='<label class="name" for="cod">Código da ficha</label><input id="cod" class="field" type="text" autocomplete="off" placeholder="FLX-0000-0000" value="'+esc(S.codigo)+'"><button class="cta center" data-a="validar">Validar ficha</button>';
 var d=S.fichas.filter(function(f){return !f.usada;});
 if(d.length){h+='<div class="eyebrow" style="margin-top:10px">Suas fichas disponíveis (atalho de teste)</div>';d.forEach(function(f){h+='<button class="prod" data-a="validar-cod" data-v="'+f.codigo+'"><span class="grow"><span class="name" style="display:block">'+esc(prod(f.prod).nome)+'</span><span class="sub">'+f.codigo+' · '+esc(ev(f.ev).nome)+'</span></span><span class="round solid">'+ic('scan',20)+'</span></button>';});}
@@ -613,7 +646,8 @@ S.sheet=false;
 if(a==='sheet'){S.sheet=true;render();}
 else if(a==='voltar')go(S.volta||'eventos');
 else if(a==='fechar'){render();}
-else if(a==='eventos')go('eventos');
+else if(a==='eventos'){fecharCamera();go('eventos');}
+else if(a==='__x')go('eventos');
 else if(a==='perfil')go('perfil');
 else if(a==='evento'){S.evento=v;save();go('menu');}
 else if(a==='ingresso'){var ki='ing-'+v;S.cart[ki]=(S.cart[ki]||0)+1;save();go('pedido');}
@@ -646,7 +680,8 @@ else if(a==='copiar'){var bt=b;try{navigator.clipboard.writeText(v).then(functio
 else if(a==='balcao-com'){var fx=S.fichas.filter(function(x){return x.codigo===v;})[0];go('balcao',{leitura:null,codigo:'',bev:fx?(fx.ev||'e1'):S.evento});validar(v);}
 else if(a==='validar'){var c=document.getElementById('cod');validar(c?c.value:'');}
 else if(a==='validar-cod')validar(v);
-else if(a==='proxima'){S.leitura=null;render();}
+else if(a==='proxima'){S.leitura=null;render();if(S.modoCam)abrirCamera();}
+else if(a==='camera'){if(podeBalcao(S.bev))abrirCamera();}
 else if(a==='reset'){S.cart={};S.fichas=[];S.leitura=null;save();render();}
 });
 app.addEventListener('input',function(e){
