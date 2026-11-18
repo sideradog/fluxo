@@ -313,7 +313,7 @@ return sb.auth.getUser().then(function(u){S.user.email=u&&u.data&&u.data.user&&u
 });
 }
 function refrescarFichas(){if(!sb||!S.user)return;sb.from('fichas').select('codigo,produto,evento_id,usada').eq('usuario_id',S.user.uid).order('criado_em',{ascending:false}).then(function(r){if(r.error)return;S.fichas=(r.data||[]).map(mapFicha);if(['fichas','ficha','perfil'].indexOf(S.view)>=0)render();});}
-function verificarAcesso(){if(!sb||!S.user)return;sb.from('equipe').select('evento_id').eq('usuario_id',S.user.uid).then(function(r){if(r.error)return;S.user.balcao={};(r.data||[]).forEach(function(x){S.user.balcao[x.evento_id]=true;});if(S.view==='balcao')render();});}
+function verificarAcesso(){if(!sb||!S.user)return;sb.from('equipe').select('evento_id').eq('usuario_id',S.user.uid).then(function(r){if(r.error)return;var antes=JSON.stringify(S.user.balcao);S.user.balcao={};(r.data||[]).forEach(function(x){S.user.balcao[x.evento_id]=true;});if(S.view==='balcao'||(S.sheet&&antes!==JSON.stringify(S.user.balcao)))render();});}
 function carregarCompradores(id){if(!sb||!S.user)return;sb.rpc('compradores',{p_evento:id}).then(function(r){if(r.error){console.error(r.error);return;}S.comp[id]=r.data||[];if(S.view==='evento'&&S.evSel===id)render();});}
 function carregarEquipe(id){if(!sb||!isAdmin())return;sb.from('equipe').select('usuario_id,nome,perfis(codigo)').eq('evento_id',id).order('criado_em').then(function(r){if(r.error){console.error(r.error);S.aviso='Não foi possível carregar a equipe.';}else S.eq[id]=(r.data||[]).map(function(x){return {uid:x.usuario_id,nome:x.nome,id:x.perfis&&x.perfis.codigo||''};});if(S.view==='equipe')render();});}
 function iniciar(){
@@ -416,7 +416,12 @@ return depois(r.data.user.id);
 
 function pic(p,s,w){return p.img?'<img src="'+p.img+'" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">':ic(p.icon,s,w);}
 function brl(v){return 'R$ '+v.toFixed(2).replace('.',',');}
-function prod(id){if(String(id).indexOf('ing-')===0){var e=ev(id.slice(4));return {id:id,nome:'Ingresso '+e.nome,desc:e.lote||'Ingresso',preco:+e.preco||0,cat:'Ingressos',icon:'ticket',ing:true,ev:e.id,img:e.banner||''};}if(S.prods)for(var j=0;j<S.prods.length;j++)if(S.prods[j].id===id)return S.prods[j];for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return {id:id,nome:String(id),desc:'',preco:0,cat:'',icon:'ticket'};}
+function lotesDe(e){if(e.lotes&&e.lotes.length)return e.lotes;return +e.preco>0?[{id:'',nome:e.lote||'Ingresso',preco:+e.preco,status:'venda'}]:[];}
+function linhaLote(l){l=l||{id:'l'+Date.now().toString(36)+Math.random().toString(36).slice(2,4),nome:'',preco:'',status:'venda'};
+return '<div class="ltrow" data-id="'+esc(l.id)+'"><div class="row" style="gap:8px"><input class="inp lt-nome" type="text" maxlength="40" aria-label="Nome do lote" placeholder="Ex.: 2º lote" value="'+esc(l.nome||'')+'" style="flex:1;min-width:0"><input class="inp lt-preco" type="text" inputmode="decimal" maxlength="10" aria-label="Preço do lote" placeholder="35,00" value="'+(l.preco!==''&&l.preco!==undefined?precoTxt(+l.preco):'')+'" style="width:96px"></div>'
++'<div class="row" style="gap:8px"><select class="inp lt-st" aria-label="Situação do lote" style="flex:1;min-width:0"><option value="venda"'+(l.status==='venda'?' selected':'')+'>À venda</option><option value="esgotado"'+(l.status==='esgotado'?' selected':'')+'>Esgotado (aparece riscado)</option><option value="oculto"'+(l.status==='oculto'?' selected':'')+'>Oculto</option></select><button type="button" class="round" style="border:1px solid var(--line2)" aria-label="Remover lote" data-a="lt-rem">'+ic('trash',18)+'</button></div></div>';}
+function avisoForm(msg){var el=document.getElementById('ev-aviso');if(el){el.textContent=msg;el.style.display='block';el.scrollIntoView({block:'center'});}}
+function prod(id){if(String(id).indexOf('ing-')===0){var pt=String(id).slice(4).split('.'),e=ev(pt[0]),lt=lotesDe(e).filter(function(x){return x.id===(pt[1]||'');})[0]||lotesDe(e)[0]||{nome:'Ingresso',preco:0};return {id:id,nome:'Ingresso '+e.nome+(lt.nome&&lt.nome!=='Ingresso'?' · '+lt.nome:''),desc:lt.nome,preco:+lt.preco||0,cat:'Ingressos',icon:'ticket',ing:true,ev:e.id,img:e.banner||''};}if(S.prods)for(var j=0;j<S.prods.length;j++)if(S.prods[j].id===id)return S.prods[j];for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return {id:id,nome:String(id),desc:'',preco:0,cat:'',icon:'ticket'};}
 function cartCount(){var n=0;for(var k in S.cart)n+=S.cart[k];return n;}
 function cartTotal(){var t=0;for(var k in S.cart)t+=S.cart[k]*prod(k).preco;return t;}
 function novoCodigo(){var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<8;i++){s+=a[Math.floor(Math.random()*a.length)];}return 'FLX-'+s.slice(0,4)+'-'+s.slice(4);}
@@ -523,7 +528,10 @@ var h='<div class="evpage"><div class="evhero'+(e.banner?' hasimg':'')+'" style=
 +'<div class="evfacts"><div><span>'+ic('cal',20,2)+'</span><div><b>Quando</b>'+esc(e.quando)+'</div></div><div><span>'+ic('pin',20,2)+'</span><div><b>Onde</b>'+esc(e.onde)+'</div></div></div>';
 if(paras.length){h+='<div class="evsec"><h2>Sobre a festa</h2>';paras.forEach(function(p){h+='<p>'+esc(p)+'</p>';});h+='</div>';}
 if(regras.length){h+='<div class="evsec"><h2>Escolha a sua cor</h2><div class="evrules">';regras.forEach(function(r){h+='<div><i style="background:'+r.c+'"></i><div><b>'+esc(r.k)+'</b>'+esc(r.v)+'</div></div>';});h+='</div></div>';}
-if(+e.preco>0){h+='<div class="evsec"><div class="row between"><h2>Ingressos</h2><span style="font-size:13px;color:#C9D6F5">a partir de '+brl(+e.preco)+'</span></div><div class="evtix"><div class="grow"><b>'+esc(e.lote||'Ingresso')+'</b><span class="sora">'+brl(+e.preco)+'</span></div><button class="cta" style="width:auto;height:48px;padding:0 18px;gap:8px;background:#fff;color:var(--navy);font-size:15px" data-a="ingresso" data-v="'+e.id+'">'+ic('plus',18,2.6)+'Comprar</button></div></div>';}
+var lts=lotesDe(e).filter(function(l){return l.status!=='oculto';}),vend=lts.filter(function(l){return l.status==='venda';});
+if(lts.length){h+='<div class="evsec"><div class="row between"><h2>Ingressos</h2><span style="font-size:13px;color:#C9D6F5">'+(vend.length?'a partir de '+brl(Math.min.apply(null,vend.map(function(l){return +l.preco;}))):'Esgotado')+'</span></div>';
+lts.forEach(function(l){var ok=l.status==='venda';h+='<div class="evtix" style="'+(ok?'':'opacity:.6')+'"><div class="grow"><b>'+esc(l.nome||'Ingresso')+'</b><span class="sora" style="'+(ok?'':'text-decoration:line-through')+'">'+brl(+l.preco)+'</span></div>'+(ok?'<button class="cta" style="width:auto;height:48px;padding:0 18px;gap:8px;background:#fff;color:var(--navy);font-size:15px" data-a="ingresso" data-v="'+esc(e.id+(l.id?'.'+l.id:''))+'">'+ic('plus',18,2.6)+'Comprar</button>':'<span class="evchip" style="background:#3A2030;color:#FFB4B4">Esgotado</span>')+'</div>';});
+h+='</div>';}
 var cp=S.comp[e.id]||[];
 if(cp.length){h+='<div class="row" style="gap:12px"><span class="row">'+cp.slice(0,6).map(miniAv).join('')+'</span><div><b style="display:block;font-size:15px">Últimos compradores</b><span style="font-size:13px;color:#C9D6F5">'+(cp.length>=8?'8 ou mais pessoas já garantiram':cp.length+(cp.length===1?' pessoa já garantiu':' pessoas já garantiram'))+'</span></div></div>';}
 if(e.org){h+='<div class="evorg"><span class="sora">'+esc(e.org.charAt(0).toUpperCase())+'</span><div><small>Organizado por</small><b>'+esc(e.org)+'</b></div></div>';}
@@ -539,8 +547,8 @@ return h;
 function vEvEdit(){
 if(!isAdmin())return vEventos();
 var e=ev(S.evSel),bn=S.draft!==null?S.draft:(e.banner||''),nv=e.custom&&!S.evEdits[e.id];
-return '<div class="head"><button class="round" aria-label="Voltar para o evento" data-a="ev-abrir" data-v="'+e.id+'">'+ic('back',20,2.4)+'</button><h1>'+(e.custom&&!S.evEdits[e.id]?'Novo evento':'Editar evento')+'</h1></div><div class="body"><div class="note"><span><b>Área do administrador</b>Clientes não veem esta tela. As alterações valem para todos os aparelhos.</span></div>'
-+(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')+'<form id="evform" novalidate style="display:flex;flex-direction:column;gap:14px">'
+return '<div class="head"><button class="round" aria-label="Voltar" data-a="'+(nv?'eventos':'ev-abrir')+'" data-v="'+e.id+'">'+ic('back',20,2.4)+'</button><h1>'+(nv?'Novo evento':'Editar evento')+'</h1></div><div class="body"><div class="note"><span><b>Área do administrador</b>Clientes não veem esta tela. As alterações valem para todos os aparelhos.</span></div>'
++'<div id="ev-aviso" class="err" role="alert" style="'+(S.aviso?'':'display:none')+'">'+esc(S.aviso||'')+'</div><form id="evform" novalidate style="display:flex;flex-direction:column;gap:14px">'
 +'<div class="lbl">Banner<img id="ee-prev" src="'+bn+'" alt="Prévia do banner" style="width:100%;border-radius:14px;'+(bn?'':'display:none')+'"><label class="cta center line" for="ee-banner" style="height:52px;cursor:pointer">Escolher imagem</label><input id="ee-banner" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0"></div>'
 +'<label class="lbl">Nome do evento<input class="inp" id="ee-nome" type="text" maxlength="60" placeholder="Ex.: Baile de Verão" value="'+esc(nv?'':e.nome)+'"></label>'
 +'<label class="lbl">Data e hora<input class="inp" id="ee-quando" type="text" maxlength="40" placeholder="Ex.: Sáb, 12 Dez · 22:00" value="'+esc(nv?'':e.quando)+'"></label>'
@@ -548,8 +556,7 @@ return '<div class="head"><button class="round" aria-label="Voltar para o evento
 +'<label class="lbl">Endereço ou local (abre no Google Maps)<input class="inp" id="ee-local" type="text" maxlength="120" placeholder="Ex.: Rua tal, 123, Assis - SP" value="'+esc(e.local||'')+'"></label>'
 +'<label class="lbl">Instagram da festa (@usuario ou link)<input class="inp" id="ee-insta" type="text" maxlength="120" placeholder="@suafesta" value="'+esc(e.insta||'')+'"></label>'
 +'<label class="lbl">Organizador<input class="inp" id="ee-org" type="text" maxlength="60" value="'+esc(e.org||'')+'"></label>'
-+'<label class="lbl">Nome do lote de ingresso<input class="inp" id="ee-lote" type="text" maxlength="40" placeholder="Ex.: Lote promocional" value="'+esc(e.lote||'')+'"></label>'
-+'<label class="lbl">Preço do ingresso em reais (vazio = sem venda)<input class="inp" id="ee-preco" type="text" inputmode="decimal" maxlength="8" placeholder="25,00" value="'+(+e.preco>0?(+e.preco).toFixed(2).replace('.',','):'')+'"></label>'
++'<div class="box" style="display:flex;flex-direction:column;gap:12px"><div class="sora" style="font-weight:700;font-size:17px">Lotes de ingresso</div><div class="sub">Nome e preço de cada lote. Quando um acabar, mude para Esgotado e deixe o próximo À venda. Sem lotes, o evento não vende ingresso.</div><div id="lotes" style="display:flex;flex-direction:column;gap:14px">'+lotesDe(e).map(linhaLote).join('')+'</div><button type="button" class="cta center line" style="height:50px" data-a="lt-add">'+ic('plus',18,2.4)+'&nbsp; Adicionar lote</button></div>'
 +'<label class="lbl">Descrição<textarea class="inp" id="ee-desc" rows="6" maxlength="800" style="height:auto;padding:12px 14px;font-family:inherit;line-height:1.45">'+esc(e.desc||'')+'</textarea></label>'
 +'<button class="cta center navy" type="submit">Salvar alterações</button></form>'
 +(e.custom?(S.evEdits[e.id]?'<button class="linkbtn" style="align-self:center" data-a="ev-ocultar" data-v="'+e.id+'">'+(e.oculto?'Mostrar o evento para os clientes':'Ocultar o evento dos clientes')+'</button>':''):'<button class="linkbtn" style="align-self:center" data-a="ev-reset" data-v="'+e.id+'">Restaurar o evento original</button>')+'</div>';
@@ -572,9 +579,11 @@ function salvarEvento(){
 if(!isAdmin())return go('eventos');
 var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
 var id=ev(S.evSel).id,o=JSON.parse(JSON.stringify(S.evEdits[id]||{})),nome=g('ee-nome');
-if(ev(id).custom&&!S.evEdits[id]&&nome.length<2){S.aviso='Dê um nome ao evento.';return render();}
+if(ev(id).custom&&!S.evEdits[id]&&nome.length<2)return avisoForm('Dê um nome ao evento.');
+var lts=[],erroLt='';[].slice.call(document.querySelectorAll('#lotes .ltrow')).forEach(function(r,i){var n=r.querySelector('.lt-nome').value.trim(),pt=r.querySelector('.lt-preco').value.trim();if(!n&&!pt)return;var pr=lerPreco(pt);if(!n)erroLt='Dê um nome ao lote '+(i+1)+'.';else if(isNaN(pr)||pr<=0)erroLt='Confira o preço do lote "'+n+'".';lts.push({id:r.getAttribute('data-id'),nome:n.slice(0,40),preco:pr,status:r.querySelector('.lt-st').value});});
+if(erroLt)return avisoForm(erroLt);
 if(nome)o.nome=nome;
-o.quando=g('ee-quando')||'[DATA E HORA]';o.onde=g('ee-onde')||'[CIDADE]';o.desc=g('ee-desc');o.local=g('ee-local');o.insta=g('ee-insta').replace(/[<>"'\s]/g,'');o.org=g('ee-org');o.lote=g('ee-lote');var pv=parseFloat(g('ee-preco').replace(/\./g,'').replace(',','.'));o.preco=pv>0?Math.round(pv*100)/100:0;
+o.quando=g('ee-quando')||'[DATA E HORA]';o.onde=g('ee-onde')||'[CIDADE]';o.desc=g('ee-desc');o.local=g('ee-local');o.insta=g('ee-insta').replace(/[<>"'\s]/g,'');o.org=g('ee-org');o.lotes=lts;var vd=lts.filter(function(l){return l.status==='venda';});o.preco=vd.length?Math.min.apply(null,vd.map(function(l){return l.preco;})):0;o.lote=vd.length?vd[0].nome:'';
 if(S.draft!==null)o.banner=S.draft;
 var w=nome.split(/\s+/);o.sig=((w[0]||'').charAt(0)+(w[1]||'').charAt(0)).toUpperCase()||ev(id).sig;
 S.draft=null;S.aviso='';sb.from('eventos').upsert({id:id,dados:o,atualizado_em:new Date().toISOString()}).then(function(r){if(r.error){console.error(r.error);S.aviso='Não foi possível salvar: '+r.error.message;return render();}S.evEdits[id]=o;if((S.evOrd||[]).indexOf(id)<0)(S.evOrd=S.evOrd||[]).push(id);go('evento');});
@@ -610,7 +619,7 @@ return '<div class="head"><button class="round" aria-label="Voltar" data-a="volt
 function vSheet(){
 function it(a,icn,t,sub){return '<button class="prod" style="border:0;padding:10px 6px" data-a="'+a+'"><span class="tile" style="width:46px;height:46px">'+ic(icn,22,2)+'</span><span class="grow"><span class="name" style="display:block">'+t+'</span>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</span>'+ic('next',18,2.4)+'</button>';}
 return '<div class="shade" data-a="fechar"></div><div class="sheet" role="dialog" aria-label="Menu"><div class="row between" style="padding:0 6px 6px"><div class="sora" style="font-weight:700;font-size:18px">Menu</div><button class="round" aria-label="Fechar menu" data-a="fechar">'+ic('x',18,2.4)+'</button></div>'
-+it('menu','list','Cardápio')+it('fichas','ticket','Minhas fichas')+it('eventos','cal','Eventos',esc(ev(S.evento).nome))+it('perfil','user','Meu perfil')+it('balcao','scan','Modo balcão','Só para a equipe autorizada')+(isAdmin()?it('cardadm','list','Gerenciar cardápio','Produtos, preços e fotos'):'')+(S.user&&S.user.super?it('admins','user','Administradores','Dar e tirar acesso de admin'):'')+it('sair','out','Sair da conta')+'</div>';
++it('menu','list','Cardápio')+it('fichas','ticket','Minhas fichas')+it('eventos','cal','Eventos',esc(ev(S.evento).nome))+it('perfil','user','Meu perfil')+(meusBalcoes().length?it('balcao','scan','Modo balcão','Validar fichas na entrada e no bar'):'')+(isAdmin()?it('cardadm','list','Gerenciar cardápio','Produtos, preços e fotos'):'')+(S.user&&S.user.super?it('admins','user','Administradores','Dar e tirar acesso de admin'):'')+it('sair','out','Sair da conta')+'</div>';
 }
 function ticketHtml(f){
 return '<button class="ticket" data-a="abrir" data-v="'+f.codigo+'"'+(f.usada?' disabled':'')+'><span class="stub'+(f.usada?' used':'')+'">'+ic(prod(f.prod).icon,30,1.8)+'</span><span class="dash"></span><span class="grow" style="padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center"><span class="name" style="font-weight:700">'+prod(f.prod).nome+'</span><span class="sub">Ficha '+f.codigo+'</span><span class="sub">'+esc(ev(f.ev).nome)+'</span>'
@@ -727,13 +736,15 @@ if(S.view==='ficha'&&document.getElementById('qrbox')){tickQr();if(!timer)timer=
 app.addEventListener('click',function(e){
 var b=e.target.closest('[data-a]');if(!b)return;var a=b.getAttribute('data-a'),v=b.getAttribute('data-v');
 S.sheet=false;
-if(a==='sheet'){S.sheet=true;render();}
+if(a==='sheet'){S.sheet=true;render();verificarAcesso();}
 else if(a==='voltar')go(S.volta||'eventos');
 else if(a==='fechar'){render();}
 else if(a==='eventos'){fecharCamera();go('eventos');}
 else if(a==='__x')go('eventos');
 else if(a==='perfil')go('perfil');
 else if(a==='evento'){S.evento=v;save();go('menu');}
+else if(a==='lt-add'){var box=document.getElementById('lotes');if(box){box.insertAdjacentHTML('beforeend',linhaLote());var ins=box.querySelectorAll('.lt-nome');ins[ins.length-1].focus();}return;}
+else if(a==='lt-rem'){var rw=b.closest('.ltrow');if(rw)rw.remove();return;}
 else if(a==='ingresso'){var ki='ing-'+v;S.cart[ki]=(S.cart[ki]||0)+1;save();go('pedido');}
 else if(a==='foto-rem'){if(S.user&&sb)sb.from('perfis').update({foto:null}).eq('id',S.user.uid).then(function(r){if(!r.error){delete S.user.foto;render();}});}
 else if(a==='ev-novo'){if(isAdmin())go('evedit',{evSel:'ev'+Date.now().toString(36),draft:null,aviso:''});}
