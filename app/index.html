@@ -198,9 +198,19 @@ var CATS=['Todos','Bebidas','Promoções','Combos','Mesas'];
 var KEY='fluxo-demo-v2';
 var S={view:'menu',cat:'Todos',busca:'',item:null,qtd:1,pag:'pix',cart:{},fichas:[],aba:'disp',ficha:null,leitura:null,codigo:'',evento:'e1',sheet:false,evEdits:{},evSel:null,draft:null,equipe:{},bev:null,ultCod:null,aviso:''};
 S.user=null;S.auth='entrar';S.erro='';
-try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){S.cart=sv.cart||{};S.fichas=sv.fichas||[];S.user=sv.user||null;S.evento=sv.evento||'e1';S.evEdits=sv.evEdits||{};S.equipe=sv.equipe||{};}}catch(e){}
+try{var sv=JSON.parse(localStorage.getItem(KEY)||'null');if(sv){S.cart=sv.cart||{};S.fichas=sv.fichas||[];S.user=sv.user||null;S.evento=sv.evento||'e1';S.evEdits=sv.evEdits||{};S.equipe=sv.equipe||{};S.contas=sv.contas||{};}}catch(e){}
+if(!S.contas)S.contas={};
+if(S.user&&!S.user.ck){S.user=null;S.cart={};S.fichas=[];}
 S.view=S.user?'eventos':'login';
-function save(){try{localStorage.setItem(KEY,JSON.stringify({cart:S.cart,fichas:S.fichas,user:S.user,evento:S.evento,evEdits:S.evEdits,equipe:S.equipe}));}catch(e){}}
+function save(){
+if(S.user&&S.user.ck&&S.contas[S.user.ck]){var c=S.contas[S.user.ck];c.nome=S.user.nome;c.foto=S.user.foto||'';c.balcao=S.user.balcao||{};c.fichas=S.fichas;c.cart=S.cart;}
+try{localStorage.setItem(KEY,JSON.stringify({cart:S.cart,fichas:S.fichas,user:S.user,evento:S.evento,evEdits:S.evEdits,equipe:S.equipe,contas:S.contas}));}catch(e){}}
+function hashSenha(p,salt,modo){
+if(modo!=='c1'&&window.crypto&&crypto.subtle&&window.TextEncoder){var enc=new TextEncoder();
+return crypto.subtle.importKey('raw',enc.encode(p),'PBKDF2',false,['deriveBits']).then(function(k){return crypto.subtle.deriveBits({name:'PBKDF2',salt:enc.encode(salt),iterations:120000,hash:'SHA-256'},k,256);}).then(function(buf){var u=new Uint8Array(buf),t='';for(var i=0;i<u.length;i++)t+=('0'+u[i].toString(16)).slice(-2);return 'p1:'+t;});}
+var h=p+'|'+salt;for(var i=0;i<3000;i++)h=String(cyrb(h+salt+i));return Promise.resolve('c1:'+h);}
+function novoSalt(){var t='';try{var u=new Uint8Array(12);crypto.getRandomValues(u);for(var i=0;i<u.length;i++)t+=('0'+u[i].toString(16)).slice(-2);}catch(e){t=String(Math.random()).slice(2)+String(Date.now());}return t;}
+function entrarConta(ck){var c=S.contas[ck];S.user={ck:ck,nome:c.nome,id:c.id,admin:!!c.admin,foto:c.foto||'',balcao:c.balcao||{},cpfFim:c.cpfFim||''};if(!S.user.foto)delete S.user.foto;S.fichas=c.fichas||[];S.cart=c.cart||{};S.erro='';save();go('eventos');}
 function maskCpf(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{3})(\d)/,'$1.$2').replace(/^(\d{3})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1-$2');}
 function maskCel(v){var d=v.replace(/\D/g,'').slice(0,11);return d.replace(/^(\d{2})(\d)/,'($1) $2').replace(/(\d{5})(\d)/,'$1-$2');}
 function vLogin(){
@@ -214,23 +224,30 @@ if(criar)h+='<label class="lbl">Celular<input class="inp" id="f-cel" type="tel" 
 h+='<label class="lbl">Senha<input class="inp" id="f-senha" type="password" autocomplete="'+(criar?'new-password':'current-password')+'" placeholder="'+(criar?'Mínimo de 6 caracteres':'Sua senha')+'"></label>';
 h+='<button class="cta center navy" type="submit">'+(criar?'Criar conta':'Entrar')+'</button></form>';
 h+='<div style="text-align:center;font-size:15px;color:var(--muted)">'+(criar?'Já tem conta?':'Ainda não tem conta?')+' <button class="linkbtn" data-a="auth" data-v="'+(criar?'entrar':'criar')+'">'+(criar?'Entrar':'Criar conta')+'</button></div>';
-h+='<div class="sub" style="text-align:center;margin-top:auto">Nesta demonstração o login é simulado: qualquer CPF com 11 números e senha de 6 caracteres entra. CPF e senha não são guardados.</div></div>';
+h+='<div class="sub" style="text-align:center;margin-top:auto">Nesta demonstração a conta fica salva só neste aparelho. A senha é guardada embaralhada, nunca em texto.</div></div>';
 return h;
 }
 function cyrb(s){var h1=0xdeadbeef,h2=0x41c6ce57;for(var i=0;i<s.length;i++){var c=s.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);}
 function autenticar(){
 var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
-var criar=S.auth==='criar',cpf=g('f-cpf').replace(/\D/g,''),senha=g('f-senha'),nome=g('f-nome');
+var criar=S.auth==='criar',cpf=g('f-cpf').replace(/\D/g,''),senha=g('f-senha'),nome=g('f-nome').replace(/\s+/g,' ');
 if(criar&&nome.length<2){S.erro='Digite seu nome.';return render();}
 if(cpf.length!==11){S.erro='Digite um CPF com 11 números.';return render();}
 if(criar&&g('f-cel').replace(/\D/g,'').length<10){S.erro='Digite um celular com DDD.';return render();}
 if(senha.length<6){S.erro='A senha precisa ter pelo menos 6 caracteres.';return render();}
-var adm=false;
 if(cpf==='11111111111'){
 if(criar){S.erro='Este CPF já tem conta. Toque em Entrar.';return render();}
 if(cyrb(cpf+':'+senha)!==118782819781992){S.erro='Senha incorreta.';return render();}
-adm=true;}
-S.erro='';S.user=adm?{nome:'Sid',admin:true}:{nome:criar?nome.split(' ')[0]:'cliente'};S.user.id=idDe(cpf);S.user.balcao={};save();go('eventos');
+if(!S.contas.admin)S.contas.admin={nome:'Sid',id:idDe(cpf),admin:true};
+return entrarConta('admin');}
+var ck='k'+cyrb('fluxo-cpf:'+cpf),c=S.contas[ck];
+if(criar){
+if(c){S.erro='Este CPF já tem conta neste aparelho. Toque em Entrar.';return render();}
+var salt=novoSalt();
+hashSenha(senha,salt).then(function(h){S.contas[ck]={nome:nome.slice(0,40),id:idDe(cpf),salt:salt,senha:h,cpfFim:cpf.slice(9),cel:g('f-cel')};entrarConta(ck);});
+return;}
+if(!c){S.erro='Não achamos uma conta com este CPF neste aparelho. Toque em Criar conta.';return render();}
+hashSenha(senha,c.salt,c.senha.slice(0,2)).then(function(h){if(h!==c.senha){S.erro='Senha incorreta.';return render();}entrarConta(ck);});
 }
 
 function pic(p,s,w){return p.img?'<img src="'+p.img+'" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">':ic(p.icon,s,w);}
@@ -310,7 +327,7 @@ function vEventos(){
 var q=(S.buscaEv||'').trim().toLowerCase();
 var list=EVENTOS.map(function(e){return ev(e.id);}).filter(function(e){return !q||e.nome.toLowerCase().indexOf(q)>=0||e.onde.toLowerCase().indexOf(q)>=0;});
 var disp=S.fichas.filter(function(f){return !f.usada;}).length;
-var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><div class="row" style="gap:8px"><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button><button class="round dark" aria-label="Abrir menu" data-a="sheet">'+ic('dots',22)+'</button></div></div><div><div class="eyebrow">Olá, '+esc(S.user?S.user.nome:'cliente')+(isAdmin()?' <span style="background:#fff;color:#0A1F4D;border-radius:8px;padding:2px 8px;margin-left:4px">Admin</span>':'')+'</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">Onde é a festa hoje?</div></div><div class="search">'+ic('search',18)+'<input id="buscaev" type="search" aria-label="Buscar eventos" placeholder="Busque eventos ou cidades" value="'+esc(S.buscaEv||'')+'"></div></div><div class="body" style="padding-top:20px;gap:18px"><h1 style="margin:0;font-size:22px">Selecione o evento</h1>';
+var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><div class="row" style="gap:8px"><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button><button class="round dark" aria-label="Abrir menu" data-a="sheet">'+ic('dots',22)+'</button></div></div><div><div class="eyebrow">Olá, '+esc(S.user?S.user.nome.split(' ')[0]:'cliente')+(isAdmin()?' <span style="background:#fff;color:#0A1F4D;border-radius:8px;padding:2px 8px;margin-left:4px">Admin</span>':'')+'</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">Onde é a festa hoje?</div></div><div class="search">'+ic('search',18)+'<input id="buscaev" type="search" aria-label="Buscar eventos" placeholder="Busque eventos ou cidades" value="'+esc(S.buscaEv||'')+'"></div></div><div class="body" style="padding-top:20px;gap:18px"><h1 style="margin:0;font-size:22px">Selecione o evento</h1>';
 if(!list.length)h+='<div class="empty">Nenhum evento encontrado.</div>';
 list.forEach(function(e){var on=e.id===S.evento;
 h+='<div class="evcard" style="background:'+e.cor+'">'
@@ -371,11 +388,16 @@ return '<div class="head"><button class="round" aria-label="Voltar para o evento
 +'<button class="cta center navy" type="submit">Salvar alterações</button></form>'
 +'<button class="linkbtn" style="align-self:center" data-a="ev-reset" data-v="'+e.id+'">Restaurar o evento original</button></div>';
 }
+function eqLista(id){return (S.equipe[id]||[]).map(function(u){return typeof u==='string'?{id:u,nome:''}:u;});}
 function autorizar(){
 if(!isAdmin())return go('eventos');
-var n=document.getElementById('eq-id'),uid=normId(n?n.value:''),id=ev(S.evSel).id;
+var n=document.getElementById('eq-id'),m=document.getElementById('eq-nome'),bruto=String(n?n.value:''),nome=String(m?m.value:'').trim(),id=ev(S.evSel).id;
+var p=bruto.split('|');if(p.length>1&&!nome)nome=p.slice(1).join(' ').trim();
+var uid=normId(p[0]);
 if(uid.length<6){S.aviso='Digite o ID do usuário, no formato U-XXXXXXXX.';S.ultCod=null;return render();}
-var l=S.equipe[id]||[];if(l.indexOf(uid)<0)l.push(uid);S.equipe[id]=l;S.aviso='';S.ultCod={id:uid,cod:codAcesso(uid,id)};save();render();
+if(nome.length<2){S.aviso='Digite o nome da pessoa.';S.ultCod=null;return render();}
+nome=nome.replace(/\s+/g,' ').slice(0,40);
+var l=eqLista(id).filter(function(u){return u.id!==uid;});l.push({id:uid,nome:nome});S.equipe[id]=l;S.aviso='';S.ultCod={id:uid,nome:nome,cod:codAcesso(uid,id)};save();render();
 }
 function liberar(){
 var n=document.getElementById('ac-cod'),c=String(n?n.value:'').toUpperCase().replace(/[^A-Z0-9]/g,''),ok=false;
@@ -411,9 +433,9 @@ c.getContext('2d').drawImage(im,(im.width-d)/2,(im.height-d)/2,d,d,0,0,240,240);
 function vPerfil(){
 var d=S.fichas.filter(function(f){return !f.usada;}).length,u=S.fichas.length-d,n=S.user?S.user.nome:'cliente';
 return '<div class="head"><button class="round" aria-label="Voltar" data-a="voltar">'+ic('back',20,2.4)+'</button><h1>Meu perfil</h1></div><div class="body">'
-+'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+'</div></div></div>'
++'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+(S.user&&S.user.cpfFim?' · CPF ***.***.***-'+esc(S.user.cpfFim):'')+'</div></div></div>'
 +'<div class="row" style="gap:10px;flex-wrap:wrap"><label class="pill" for="pf-foto" style="border:1px solid var(--line2);cursor:pointer">'+ic('user',18)+(S.user&&S.user.foto?'Trocar foto':'Escolher foto')+'</label><input id="pf-foto" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0">'+(S.user&&S.user.foto?'<button class="linkbtn" data-a="foto-rem">Remover foto</button>':'')+'</div></div>'
-+'<div class="box row between" style="gap:12px"><div><div class="eyebrow">Meu ID de usuário</div><div class="code" style="margin-top:4px">'+meuId()+'</div></div><button class="pill" style="border:1px solid var(--line2)" data-a="copiar" data-v="'+meuId()+'">Copiar</button></div>'
++'<div class="box row between" style="gap:12px"><div><div class="eyebrow">Meu ID de usuário</div><div class="code" style="margin-top:4px">'+meuId()+'</div></div><button class="pill" style="border:1px solid var(--line2)" data-a="copiar" data-v="'+esc(meuId()+' | '+(S.user?S.user.nome:''))+'">Copiar</button></div>'
 +'<div class="row" style="gap:12px"><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+d+'</div><div class="sub">fichas disponíveis</div></div><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+u+'</div><div class="sub">fichas usadas</div></div></div>'
 +'<button class="prod" data-a="fichas"><span class="tile">'+ic('ticket',26,1.8)+'</span><span class="grow name">Minhas fichas</span>'+ic('next',20,2.4)+'</button>'
 +'<button class="prod" data-a="eventos"><span class="tile">'+ic('cal',26,1.8)+'</span><span class="grow"><span class="name" style="display:block">Evento atual</span><span class="sub">'+esc(ev(S.evento).nome)+'</span></span>'+ic('next',20,2.4)+'</button>'
@@ -455,13 +477,13 @@ bar.style.width=(100-((now%30000)/300))+'%';
 
 function vEquipe(){
 if(!isAdmin())return vEventos();
-var e=ev(S.evSel),lista=S.equipe[e.id]||[];
+var e=ev(S.evSel),lista=eqLista(e.id);
 var h='<div class="head"><button class="round" aria-label="Voltar para o evento" data-a="ev-abrir" data-v="'+e.id+'">'+ic('back',20,2.4)+'</button><h1>Equipe do balcão</h1></div><div class="body"><div class="note"><span><b>'+esc(e.nome)+'</b>Só administradores veem esta tela. Quem for autorizado aqui valida fichas apenas deste evento.</span></div>'
-+'<form id="eqform" novalidate style="display:flex;flex-direction:column;gap:12px"><label class="lbl">ID do usuário<input class="field" id="eq-id" type="text" autocomplete="off" placeholder="U-XXXXXXXX" style="font-size:18px"></label><div class="sub">A pessoa encontra o próprio ID em Meu perfil.</div>'+(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')+'<button class="cta center navy" type="submit">Autorizar no balcão</button></form>';
-if(S.ultCod){h+='<div class="box" style="border:2px solid var(--blue);display:flex;flex-direction:column;gap:10px"><div class="eyebrow">Código de acesso de '+esc(S.ultCod.id)+'</div><div class="code" id="eq-cod" style="font-size:26px;letter-spacing:4px">'+S.ultCod.cod+'</div><div class="sub">Envie este código para a pessoa. Ela digita uma vez em Menu, Modo balcão, e o acesso a este evento é liberado no aparelho dela.</div><button class="cta center" style="height:50px" data-a="copiar" data-v="'+S.ultCod.cod+'">Copiar código</button></div>';}
++'<form id="eqform" novalidate style="display:flex;flex-direction:column;gap:12px"><label class="lbl">ID do usuário<input class="field" id="eq-id" type="text" autocomplete="off" placeholder="U-XXXXXXXX" style="font-size:18px;text-transform:none"></label><label class="lbl">Nome da pessoa<input class="inp" id="eq-nome" type="text" maxlength="40" autocomplete="off" placeholder="Preenchido sozinho se vier junto com o ID"></label><div class="sub">A pessoa copia o ID em Meu perfil. Colando o texto copiado no primeiro campo, o nome entra junto.</div>'+(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')+'<button class="cta center navy" type="submit">Autorizar no balcão</button></form>';
+if(S.ultCod){h+='<div class="box" style="border:2px solid var(--blue);display:flex;flex-direction:column;gap:10px"><div class="eyebrow">Código de acesso de '+esc(S.ultCod.nome)+' ('+esc(S.ultCod.id)+')</div><div class="code" id="eq-cod" style="font-size:26px;letter-spacing:4px">'+S.ultCod.cod+'</div><div class="sub">Envie este código para a pessoa. Ela digita uma vez em Menu, Modo balcão, e o acesso a este evento é liberado no aparelho dela.</div><button class="cta center" style="height:50px" data-a="copiar" data-v="'+S.ultCod.cod+'">Copiar código</button></div>';}
 h+='<div class="sora" style="font-weight:700;font-size:16px;margin-top:6px">Autorizados ('+lista.length+')</div>';
 if(!lista.length)h+='<div class="empty" style="padding:14px">Ninguém autorizado ainda.</div>';
-lista.forEach(function(u){h+='<div class="prod"><span class="tile" style="width:44px;height:44px">'+ic('user',22)+'</span><span class="grow"><span class="name" style="display:block">'+esc(u)+'</span><span class="sub">Código: '+codAcesso(u,e.id)+'</span></span><button class="round" style="border:0" aria-label="Remover '+esc(u)+'" data-a="eq-rem" data-v="'+esc(u)+'">'+ic('trash',18)+'</button></div>';});
+lista.forEach(function(u){h+='<div class="prod"><span class="tile sora" style="width:44px;height:44px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800">'+esc((u.nome||'?').charAt(0).toUpperCase())+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">'+esc(u.nome||'Sem nome')+'</span><span class="sub">'+esc(u.id)+' · código '+codAcesso(u.id,e.id)+'</span></span><button class="round" style="border:0" aria-label="Remover '+esc(u.nome||u.id)+'" data-a="eq-rem" data-v="'+esc(u.id)+'">'+ic('trash',18)+'</button></div>';});
 return h+'</div>';
 }
 function vBalcao(){
@@ -469,7 +491,7 @@ var ids=meusBalcoes();
 var h='<div class="top" style="background:var(--navy)"><div class="row between"><div class="brand" style="font-size:20px">FLUXO <span style="font-weight:600;letter-spacing:0">Balcão</span></div><button class="pill" data-a="eventos">Sair do modo balcão</button></div>';
 if(!ids.length){
 h+='<div class="sub" style="color:#C9D6F5">Área da equipe. Só entra quem foi autorizado pelo administrador do evento.</div></div><div class="body" style="padding-top:20px">'
-+'<div class="box" style="display:flex;flex-direction:column;gap:8px"><div class="eyebrow">Seu ID de usuário</div><div class="code" style="font-size:24px;letter-spacing:3px">'+meuId()+'</div><div class="sub">Passe este ID para o administrador. Ele devolve um código de acesso.</div><button class="cta center line" style="height:50px" data-a="copiar" data-v="'+meuId()+'">Copiar meu ID</button></div>'
++'<div class="box" style="display:flex;flex-direction:column;gap:8px"><div class="eyebrow">Seu ID de usuário</div><div class="code" style="font-size:24px;letter-spacing:3px">'+meuId()+'</div><div class="sub">Passe este ID para o administrador. O botão copia o ID junto com o seu nome. Ele devolve um código de acesso.</div><button class="cta center line" style="height:50px" data-a="copiar" data-v="'+esc(meuId()+' | '+(S.user?S.user.nome:''))+'">Copiar meu ID</button></div>'
 +'<form id="acform" novalidate style="display:flex;flex-direction:column;gap:12px"><label class="lbl">Código de acesso<input class="field" id="ac-cod" type="text" autocomplete="off" maxlength="12" placeholder="XXXXXXXX"></label>'+(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')+'<button class="cta center" type="submit">Liberar meu acesso</button></form></div>';
 return h;}
 if(!S.bev||ids.indexOf(S.bev)<0)S.bev=ids.indexOf(S.evento)>=0?S.evento:ids[0];
@@ -523,7 +545,7 @@ else if(a==='ev-abrir')go('evento',{evSel:v,draft:null});
 else if(a==='ev-editar'){if(isAdmin())go('evedit',{evSel:v,draft:null});}
 else if(a==='ev-reset'){if(isAdmin()){delete S.evEdits[v];save();go('evento',{evSel:v,draft:null});}}
 else if(a==='auth'){S.auth=v;S.erro='';render();}
-else if(a==='sair'){S.user=null;S.auth='entrar';save();go('login');}
+else if(a==='sair'){save();S.user=null;S.cart={};S.fichas=[];S.auth='entrar';save();go('login');}
 else if(a==='menu')go('menu',{leitura:null});
 else if(a==='fichas')go('fichas');
 else if(a==='cat'){S.cat=v;render();}
@@ -540,7 +562,7 @@ else if(a==='abrir')go('ficha',{ficha:v});
 else if(a==='balcao')go('balcao',{leitura:null,codigo:'',aviso:''});
 else if(a==='bev'){S.bev=v;S.leitura=null;render();}
 else if(a==='equipe'){if(isAdmin())go('equipe',{evSel:v,ultCod:null,aviso:''});}
-else if(a==='eq-rem'){if(isAdmin()){var id0=ev(S.evSel).id;S.equipe[id0]=(S.equipe[id0]||[]).filter(function(u){return u!==v;});S.ultCod=null;save();render();}}
+else if(a==='eq-rem'){if(isAdmin()){var id0=ev(S.evSel).id;S.equipe[id0]=eqLista(id0).filter(function(u){return u.id!==v;});S.ultCod=null;save();render();}}
 else if(a==='copiar'){var bt=b;try{navigator.clipboard.writeText(v).then(function(){bt.textContent='Copiado';},function(){bt.textContent='Copie manualmente: '+v;});}catch(x){bt.textContent='Copie manualmente: '+v;}}
 else if(a==='balcao-com'){var fx=S.fichas.filter(function(x){return x.codigo===v;})[0];go('balcao',{leitura:null,codigo:'',bev:fx?(fx.ev||'e1'):S.evento});validar(v);}
 else if(a==='validar'){var c=document.getElementById('cod');validar(c?c.value:'');}
