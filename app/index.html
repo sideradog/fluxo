@@ -110,6 +110,15 @@ h1,h2,.sora{font-family:Sora,sans-serif}
 .evrules b{display:block;color:#fff;font-size:16px}
 .evhow>div{display:flex;align-items:center;gap:12px;color:#E4EBFB;font-size:15px}
 .evhow span{width:30px;height:30px;border-radius:50%;background:#fff;color:var(--navy);font-family:Sora,sans-serif;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.evtix{display:flex;align-items:center;gap:12px;background:#132B63;border:1px solid #2A4384;border-radius:18px;padding:16px}
+.evtix b{display:block;font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:#C9D6F5}
+.evtix .sora{font-weight:800;font-size:22px}
+.evorg{display:flex;align-items:center;gap:14px;background:#132B63;border:1px solid #2A4384;border-radius:18px;padding:14px}
+.evorg>span{width:48px;height:48px;border-radius:50%;background:#FFD23F;color:#0A1F4D;font-weight:800;font-size:22px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.evorg small{display:block;color:#C9D6F5;font-size:12px}
+.evorg b{font-size:17px}
+.evlink{display:flex;align-items:center;gap:12px;min-height:56px;background:#132B63;border:1px solid #2A4384;border-radius:16px;padding:10px 14px;color:#fff;text-decoration:none;font-weight:700;font-size:15px}
+.evlink>svg:last-child{margin-left:auto;flex-shrink:0}
 .evadmin{border:2px dashed #FFD23F;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
 .evfoot{background:linear-gradient(to top,#0A1F4D 75%,rgba(10,31,77,0))}
 .evrow{display:flex;align-items:center;gap:16px;padding:14px 0;background:none;border:0;width:100%;text-align:left;color:inherit}
@@ -144,7 +153,7 @@ food:'<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-2 2-2 2-4M13 7c0-2 2-2
 back:'<path d="M15 6l-6 6 6 6"/>',next:'<path d="M9 6l6 6-6 6"/>',
 plus:'<path d="M12 5v14M5 12h14"/>',check:'<path d="M5 12l5 5 9-10"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
 ticket:'<path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6z"/>',
-edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',pin:'<path d="M12 21s7-6.200 7-11a7 7 0 0 0-14 0c0 4.800 7 11 7 11z"/><circle cx="12" cy="10" r="2.500"/>',dots:'<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.600-7 8-7s8 3 8 7"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',list:'<path d="M4 6h16M4 12h16M4 18h16"/>',out:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
+edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',insta:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.500" cy="6.500" r="1" fill="currentColor"/>',pin:'<path d="M12 21s7-6.200 7-11a7 7 0 0 0-14 0c0 4.800 7 11 7 11z"/><circle cx="12" cy="10" r="2.500"/>',dots:'<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.600-7 8-7s8 3 8 7"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',list:'<path d="M4 6h16M4 12h16M4 18h16"/>',out:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
 search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.500-3.500"/>',
 scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/>',
 trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
@@ -154,7 +163,7 @@ function ic(n,s,w){return '<svg aria-hidden="true" width="'+(s||20)+'" height="'
 var EVENTOS=[
 {id:'e1',nome:'White Party',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'WP',cor:'#E9EEF8',tx:'#0A1F4D'},
 {id:'e2',nome:'American Pie',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'AP',cor:'#B3261E',tx:'#FFFFFF'},
-{id:'e3',nome:'Traffic Night',quando:'[DATA E HORA]',onde:'Assis',sig:'TN',cor:'#0A1F4D',tx:'#FFD23F',banner:'img/traffic-night.jpg',desc:'A última festa do ano da CBA Eventos e a despedida do Santa Felicidade, com 4 atrações.\n\nComo funciona: escolha a sua cor e entre no clima da festa.\nVerde: solteiros\nAmarelo: enrolados\nVermelho: compromissados'}
+{id:'e3',nome:'Traffic Night',quando:'[DATA E HORA]',onde:'Assis',sig:'TN',cor:'#0A1F4D',tx:'#FFD23F',banner:'img/traffic-night.jpg',org:'CBA Eventos',local:'Santa Felicidade, Assis - SP',insta:'',lote:'Lote promocional',preco:25,desc:'A última festa do ano da CBA Eventos e a despedida do Santa Felicidade, com 4 atrações.\n\nTraffic Night: você não vai querer ficar de fora!\n\nComo funciona: escolha a sua cor e entre no clima da festa.\nVerde: solteiros\nAmarelo: enrolados\nVermelho: compromissados'}
 ];
 function ev(id){var base=EVENTOS[0];for(var i=0;i<EVENTOS.length;i++)if(EVENTOS[i].id===id)base=EVENTOS[i];var o=(S.evEdits||{})[base.id]||{},r={};for(var k in base)r[k]=base[k];for(var k2 in o)r[k2]=o[k2];return r;}
 function thumb(e,cls){return e.banner?'<span class="'+cls+'" style="background:#0A1F4D;padding:0;overflow:hidden"><img src="'+e.banner+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span>':'<span class="'+cls+' sora" style="background:'+e.cor+';color:'+e.tx+'">'+esc(e.sig)+'</span>';}
@@ -216,7 +225,7 @@ S.erro='';S.user=adm?{nome:'Sid',admin:true}:{nome:criar?nome.split(' ')[0]:'cli
 
 function pic(p,s,w){return p.img?'<img src="'+p.img+'" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">':ic(p.icon,s,w);}
 function brl(v){return 'R$ '+v.toFixed(2).replace('.',',');}
-function prod(id){for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return null;}
+function prod(id){if(String(id).indexOf('ing-')===0){var e=ev(id.slice(4));return {id:id,nome:'Ingresso '+e.nome,desc:e.lote||'Ingresso',preco:+e.preco||0,cat:'Ingressos',icon:'ticket',ing:true,ev:e.id,img:e.banner||''};}for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return null;}
 function cartCount(){var n=0;for(var k in S.cart)n+=S.cart[k];return n;}
 function cartTotal(){var t=0;for(var k in S.cart)t+=S.cart[k]*prod(k).preco;return t;}
 function novoCodigo(){var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<8;i++){s+=a[Math.floor(Math.random()*a.length)];}return 'FLX-'+s.slice(0,4)+'-'+s.slice(4);}
@@ -319,6 +328,12 @@ var h='<div class="evpage"><div class="evhero" style="background:'+e.cor+'">'
 +'<div class="evfacts"><div><span>'+ic('cal',20,2)+'</span><div><b>Quando</b>'+esc(e.quando)+'</div></div><div><span>'+ic('pin',20,2)+'</span><div><b>Onde</b>'+esc(e.onde)+'</div></div></div>';
 if(paras.length){h+='<div class="evsec"><h2>Sobre a festa</h2>';paras.forEach(function(p){h+='<p>'+esc(p)+'</p>';});h+='</div>';}
 if(regras.length){h+='<div class="evsec"><h2>Escolha a sua cor</h2><div class="evrules">';regras.forEach(function(r){h+='<div><i style="background:'+r.c+'"></i><div><b>'+esc(r.k)+'</b>'+esc(r.v)+'</div></div>';});h+='</div></div>';}
+if(+e.preco>0){h+='<div class="evsec"><div class="row between"><h2>Ingressos</h2><span style="font-size:13px;color:#C9D6F5">a partir de '+brl(+e.preco)+'</span></div><div class="evtix"><div class="grow"><b>'+esc(e.lote||'Ingresso')+'</b><span class="sora">'+brl(+e.preco)+'</span></div><button class="cta" style="width:auto;height:48px;padding:0 18px;gap:8px;background:#fff;color:var(--navy);font-size:15px" data-a="ingresso" data-v="'+e.id+'">'+ic('plus',18,2.6)+'Comprar</button></div></div>';}
+if(e.org){h+='<div class="evorg"><span class="sora">'+esc(e.org.charAt(0).toUpperCase())+'</span><div><small>Organizado por</small><b>'+esc(e.org)+'</b></div></div>';}
+var lk='';
+if(e.insta)lk+='<a class="evlink" href="'+esc(/^https?:/.test(e.insta)?e.insta:'https://www.instagram.com/'+e.insta.replace(/^@/,'')+'/')+'" target="_blank" rel="noopener">'+ic('insta',20,2)+'Instagram'+ic('next',16,2.4)+'</a>';
+if(e.local)lk+='<a class="evlink" href="https://www.google.com/maps/search/?api=1&amp;query='+encodeURIComponent(e.local)+'" target="_blank" rel="noopener">'+ic('pin',20,2)+'<span class="grow"><b style="display:block">Ver no Google Maps</b><span style="font-weight:400;color:#C9D6F5;font-size:13px">'+esc(e.local)+'</span></span>'+ic('next',16,2.4)+'</a>';
+if(lk)h+='<div class="evsec"><h2>Links da festa</h2>'+lk+'</div>';
 h+='<div class="evsec evhow"><h2>Sem fila no bar</h2><div><span>1</span>Entre no evento e escolha no cardápio.</div><div><span>2</span>Pague pelo celular com Pix ou cartão.</div><div><span>3</span>Mostre a ficha no balcão e retire.</div></div>';
 if(isAdmin())h+='<div class="evadmin"><div class="eyebrow" style="color:#FFD23F">Área do administrador</div><div style="font-size:13px;color:#C9D6F5">Só administradores veem este bloco. Clientes não têm acesso à edição.</div><button class="cta center" style="background:#fff;color:var(--navy);height:52px" data-a="ev-editar" data-v="'+e.id+'">'+ic('edit',18,2)+'&nbsp; Editar evento</button></div>';
 h+='</div><div class="foot evfoot"><button class="cta" data-a="evento" data-v="'+e.id+'"><span>'+(on?'Ver cardápio':'Entrar neste evento')+'</span>'+ic('next',20,2.4)+'</button></div></div>';
@@ -333,6 +348,11 @@ return '<div class="head"><button class="round" aria-label="Voltar para o evento
 +'<label class="lbl">Nome do evento<input class="inp" id="ee-nome" type="text" maxlength="60" value="'+esc(e.nome)+'"></label>'
 +'<label class="lbl">Data e hora<input class="inp" id="ee-quando" type="text" maxlength="40" placeholder="Ex.: Sáb, 12 Dez · 22:00" value="'+esc(e.quando)+'"></label>'
 +'<label class="lbl">Cidade<input class="inp" id="ee-onde" type="text" maxlength="40" value="'+esc(e.onde)+'"></label>'
++'<label class="lbl">Endereço ou local (abre no Google Maps)<input class="inp" id="ee-local" type="text" maxlength="120" placeholder="Ex.: Rua tal, 123, Assis - SP" value="'+esc(e.local||'')+'"></label>'
++'<label class="lbl">Instagram da festa (@usuario ou link)<input class="inp" id="ee-insta" type="text" maxlength="120" placeholder="@suafesta" value="'+esc(e.insta||'')+'"></label>'
++'<label class="lbl">Organizador<input class="inp" id="ee-org" type="text" maxlength="60" value="'+esc(e.org||'')+'"></label>'
++'<label class="lbl">Nome do lote de ingresso<input class="inp" id="ee-lote" type="text" maxlength="40" placeholder="Ex.: Lote promocional" value="'+esc(e.lote||'')+'"></label>'
++'<label class="lbl">Preço do ingresso em reais (vazio = sem venda)<input class="inp" id="ee-preco" type="text" inputmode="decimal" maxlength="8" placeholder="25,00" value="'+(+e.preco>0?(+e.preco).toFixed(2).replace('.',','):'')+'"></label>'
 +'<label class="lbl">Descrição<textarea class="inp" id="ee-desc" rows="6" maxlength="800" style="height:auto;padding:12px 14px;font-family:inherit;line-height:1.45">'+esc(e.desc||'')+'</textarea></label>'
 +'<button class="cta center navy" type="submit">Salvar alterações</button></form>'
 +'<button class="linkbtn" style="align-self:center" data-a="ev-reset" data-v="'+e.id+'">Restaurar o evento original</button></div>';
@@ -342,7 +362,7 @@ if(!isAdmin())return go('eventos');
 var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
 var id=ev(S.evSel).id,o=S.evEdits[id]||{},nome=g('ee-nome');
 if(nome)o.nome=nome;
-o.quando=g('ee-quando')||'[DATA E HORA]';o.onde=g('ee-onde')||'[CIDADE]';o.desc=g('ee-desc');
+o.quando=g('ee-quando')||'[DATA E HORA]';o.onde=g('ee-onde')||'[CIDADE]';o.desc=g('ee-desc');o.local=g('ee-local');o.insta=g('ee-insta').replace(/[<>"'\s]/g,'');o.org=g('ee-org');o.lote=g('ee-lote');var pv=parseFloat(g('ee-preco').replace(/\./g,'').replace(',','.'));o.preco=pv>0?Math.round(pv*100)/100:0;
 if(S.draft!==null)o.banner=S.draft;
 var w=nome.split(/\s+/);o.sig=((w[0]||'').charAt(0)+(w[1]||'').charAt(0)).toUpperCase()||ev(id).sig;
 S.evEdits[id]=o;S.draft=null;save();go('evento');
@@ -386,7 +406,7 @@ function vFicha(){
 var f=S.fichas.filter(function(x){return x.codigo===S.ficha;})[0];
 if(!f||f.usada){return vFichas();}
 return '<div class="dark" style="flex:1;display:flex;flex-direction:column;gap:18px;padding:22px 20px"><div class="row between"><button class="round dark" aria-label="Voltar para minhas fichas" data-a="fichas">'+ic('back',20,2.4)+'</button><div class="brand" style="font-size:20px">FLUXO</div><span style="width:44px"></span></div>'
-+'<div style="text-align:center"><h1 style="margin:0;font-size:24px">Mostre no balcão</h1><div class="sub" style="font-size:14px;margin-top:6px">O atendente lê o código e entrega seu pedido.</div></div>'
++'<div style="text-align:center"><h1 style="margin:0;font-size:24px">'+(prod(f.prod).ing?'Mostre na entrada':'Mostre no balcão')+'</h1><div class="sub" style="font-size:14px;margin-top:6px">'+(prod(f.prod).ing?'A portaria lê o código e libera a sua entrada.':'O atendente lê o código e entrega seu pedido.')+'</div></div>'
 +'<div class="qr"><div class="eyebrow">Vale 1 retirada</div><div class="sora" style="font-weight:700;font-size:22px">'+prod(f.prod).nome+'</div><div id="qrbox"></div><div class="code">'+f.codigo+'</div><div class="bar"><i id="qrbar" style="width:100%"></i></div><div class="sub" style="text-align:center">Código renovado a cada 30 segundos (QR ilustrativo nesta demonstração).</div></div>'
 +'<button class="pill ghost" style="align-self:center" data-a="balcao-com" data-v="'+f.codigo+'">'+ic('scan',18)+'Simular leitura no balcão</button></div>';
 }
@@ -437,6 +457,7 @@ else if(a==='fechar'){render();}
 else if(a==='eventos')go('eventos');
 else if(a==='perfil')go('perfil');
 else if(a==='evento'){S.evento=v;save();go('menu');}
+else if(a==='ingresso'){var ki='ing-'+v;S.cart[ki]=(S.cart[ki]||0)+1;save();go('pedido');}
 else if(a==='ev-abrir')go('evento',{evSel:v,draft:null});
 else if(a==='ev-editar'){if(isAdmin())go('evedit',{evSel:v,draft:null});}
 else if(a==='ev-reset'){if(isAdmin()){delete S.evEdits[v];save();go('evento',{evSel:v,draft:null});}}
@@ -452,7 +473,7 @@ else if(a==='add'){S.cart[S.item]=(S.cart[S.item]||0)+S.qtd;save();go('menu');}
 else if(a==='pedido')go('pedido');
 else if(a==='rem'){delete S.cart[v];save();render();}
 else if(a==='pagar')go('pix');
-else if(a==='aprovar'){for(var k in S.cart)for(var i=0;i<S.cart[k];i++)S.fichas.unshift({codigo:novoCodigo(),prod:k,usada:false,ev:S.evento});S.cart={};save();go('fichas',{aba:'disp'});}
+else if(a==='aprovar'){for(var k in S.cart)for(var i=0;i<S.cart[k];i++)S.fichas.unshift({codigo:novoCodigo(),prod:k,usada:false,ev:prod(k).ing?prod(k).ev:S.evento});S.cart={};save();go('fichas',{aba:'disp'});}
 else if(a==='aba'){S.aba=v;render();}
 else if(a==='abrir')go('ficha',{ficha:v});
 else if(a==='balcao')go('balcao',{leitura:null,codigo:''});
