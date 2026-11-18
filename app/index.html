@@ -442,7 +442,7 @@ return '<svg role="img" aria-label="QR ilustrativo da ficha" width="220" height=
 
 var app=document.getElementById('app');
 var timer=null;
-function chamarPgto(body){return sb.functions.invoke('pagamento',{body:body}).then(function(r){if(r.error){var c=r.error.context;if(c&&c.json)return c.json().then(function(j){throw (j&&j.erro)||'Erro no pagamento.';},function(x){throw typeof x==='string'?x:'Erro no pagamento.';});throw 'Sem conexão com o servidor. Tente de novo.';}return r.data;});}
+function chamarPgto(body){return sb.functions.invoke('pagamentos',{body:body}).then(function(r){if(r.error){var c=r.error.context;if(c&&c.json)return c.json().then(function(j){throw (j&&j.erro)||'Erro no pagamento.';},function(x){throw typeof x==='string'?x:'Erro no pagamento.';});throw 'Sem conexão com o servidor. Tente de novo.';}return r.data;});}
 function tratarStatus(d){var st=d&&d.status&&S.pgto?d.status[S.pgto.id]:null;if(st==='pago'){pararPoll();S.pgto=null;S.cart={};S.erroPag='';save();go('fichas',{aba:'disp'});}else if(st==='falhou'){pararPoll();S.erroPag='O pagamento não foi aprovado. Tente de novo.';S.pgto=null;go('pedido');}else if(S.view==='pix')render();}
 var poll=null;function pararPoll(){if(poll){clearInterval(poll);poll=null;}}
 function iniciarPoll(){pararPoll();poll=setInterval(function(){if(S.view!=='pix'||!S.pgto)return pararPoll();chamarPgto({acao:'status',ids:[S.pgto.id]}).then(tratarStatus,function(){});},4000);}
