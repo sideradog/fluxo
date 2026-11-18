@@ -84,7 +84,7 @@ h1,h2,.sora{font-family:Sora,sans-serif}
 .evscrim{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,12,30,.92) 0%,rgba(5,12,30,.55) 38%,rgba(5,12,30,0) 70%)}
 .evhit{position:absolute;inset:0;background:none;border:0;z-index:1}
 .evhit:focus-visible{outline:3px solid #FFB020;outline-offset:-3px}
-.evinfo{position:absolute;left:18px;right:110px;bottom:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;pointer-events:none;z-index:2}
+.evinfo{position:absolute;left:18px;right:18px;bottom:16px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;pointer-events:none;z-index:2}
 .evdate{display:inline-flex;align-items:center;gap:6px;background:rgba(5,12,30,.72);color:#fff;border-radius:10px;padding:5px 10px;font-size:12px;font-weight:700}
 .evname{color:#fff;font-weight:800;font-size:22px;line-height:1.15}
 .evbadge{position:absolute;right:14px;top:14px;z-index:2;display:inline-flex;align-items:center;gap:7px;background:rgba(5,12,30,.72);color:#fff;border-radius:16px;padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;pointer-events:none}
@@ -309,11 +309,10 @@ list.forEach(function(e){var on=e.id===S.evento;
 h+='<div class="evcard" style="background:'+e.cor+'">'
 +(e.banner?'<img src="'+e.banner+'" alt="" class="evbg">':'<span class="evbig sora" style="color:'+e.tx+'" aria-hidden="true">'+esc(e.sig)+'</span>')
 +'<span class="evscrim"></span>'
-+'<button class="evhit" data-a="evento" data-v="'+e.id+'" aria-label="Entrar no evento '+esc(e.nome)+'"></button>'
++'<button class="evhit" data-a="ev-abrir" data-v="'+e.id+'" aria-label="Ver o evento '+esc(e.nome)+'"></button>'
 +(on?'<span class="evbadge"><i></i>Você está aqui</span>':'')
 +(isAdmin()?'<button class="evbtn" style="left:14px;top:14px" aria-label="Editar '+esc(e.nome)+'" data-a="ev-editar" data-v="'+e.id+'">'+ic('edit',16,2)+'Editar</button>':'')
 +'<span class="evinfo"><span class="evdate">'+ic('cal',14,2)+esc(e.quando)+' · '+esc(e.onde)+'</span><span class="evname sora">'+esc(e.nome)+'</span></span>'
-+'<button class="evbtn" style="right:14px;bottom:14px" data-a="ev-abrir" data-v="'+e.id+'">Detalhes</button>'
 +'</div>';});
 return h+'</div>';
 }
@@ -342,7 +341,7 @@ if(e.local)lk+='<a class="evlink" href="https://www.google.com/maps/search/?api=
 if(lk)h+='<div class="evsec"><h2>Links da festa</h2>'+lk+'</div>';
 h+='<div class="evsec evhow"><h2>Sem fila no bar</h2><div><span>1</span>Entre no evento e escolha no cardápio.</div><div><span>2</span>Pague pelo celular com Pix ou cartão.</div><div><span>3</span>Mostre a ficha no balcão e retire.</div></div>';
 if(isAdmin())h+='<div class="evadmin"><div class="eyebrow" style="color:#FFD23F">Área do administrador</div><div style="font-size:13px;color:#C9D6F5">Só administradores veem este bloco. Clientes não têm acesso à edição.</div><button class="cta center" style="background:#fff;color:var(--navy);height:52px" data-a="ev-editar" data-v="'+e.id+'">'+ic('edit',18,2)+'&nbsp; Editar evento</button></div>';
-h+='</div><div class="foot evfoot"><button class="cta" data-a="evento" data-v="'+e.id+'"><span>'+(on?'Ver cardápio':'Entrar neste evento')+'</span>'+ic('next',20,2.4)+'</button></div></div>';
+h+='</div><div class="foot evfoot"><button class="cta" data-a="evento" data-v="'+e.id+'"><span>Ver cardápio</span>'+ic('next',20,2.4)+'</button></div></div>';
 return h;
 }
 function vEvEdit(){
