@@ -177,7 +177,7 @@ var EVENTOS=[
 {id:'e2',nome:'American Pie',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'AP',cor:'#B3261E',tx:'#FFFFFF'},
 {id:'e3',nome:'Traffic Night',quando:'[DATA E HORA]',onde:'Assis',sig:'TN',cor:'#0A1F4D',tx:'#FFD23F',banner:'img/traffic-night-v2.jpg',org:'CBA Eventos',local:'Santa Felicidade, Assis - SP',insta:'https://www.instagram.com/_cba_eventos',lote:'Lote promocional',preco:25,desc:"🚦 TRAFFIC NIGHT – A ÚLTIMA DO ANO! 🚦\nA CBA EVENTOS prepara uma noite mais que especial para fechar o ano com chave de ouro! A Traffic Night será nossa última festa de 2026 e também nossa despedida do Santa Felicidade, um lugar que fez parte de tantos momentos e histórias inesquecíveis.\nSerão 4 atrações, muita música e uma temática que promete marcar a noite!\n🟢 SOLTEIROS: verde\n🟡 ENROLADOS: amarelo\n🔴 COMPROMISSADOS: vermelho\nUma tradição antiga está de volta à cidade de Assis! Uma festa que marcou gerações e que retorna para despertar lembranças, reviver histórias e criar novas memórias.\nÉ hora de reunir os amigos, entrar na brincadeira e viver mais uma noite inesquecível com a CBA!\n❤️ Nossa última festa do ano. Nossa despedida do Santa Felicidade. Uma noite para entrar para a história!\nTRAFFIC NIGHT – VOCÊ NÃO VAI QUERER FICAR DE FORA! 🚦"}
 ];
-function ev(id){var base=EVENTOS[0];for(var i=0;i<EVENTOS.length;i++)if(EVENTOS[i].id===id)base=EVENTOS[i];var o=(S.evEdits||{})[base.id]||{},r={};for(var k in base)r[k]=base[k];for(var k2 in o)r[k2]=o[k2];return r;}
+function ev(id){var base=null;for(var i=0;i<EVENTOS.length;i++)if(EVENTOS[i].id===id)base=EVENTOS[i];if(!base)base={id:id,nome:'Novo evento',quando:'[DATA E HORA]',onde:'[CIDADE]',sig:'NE',cor:'#123A7E',tx:'#FFFFFF',custom:true};var o=(S.evEdits||{})[base.id]||{},r={};for(var k in base)r[k]=base[k];for(var k2 in o)r[k2]=o[k2];return r;}
 function thumb(e,cls){return e.banner?'<span class="'+cls+'" style="background:#0A1F4D;padding:0;overflow:hidden"><img src="'+e.banner+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span>':'<span class="'+cls+' sora" style="background:'+e.cor+';color:'+e.tx+'">'+esc(e.sig)+'</span>';}
 function isAdmin(){return !!(S.user&&S.user.admin);}
 function b36(n,len){var t=Math.abs(n).toString(36).toUpperCase().replace(/[O0I1L]/g,'X');while(t.length<len)t='X'+t;return t.slice(-len);}
@@ -186,7 +186,7 @@ function meuId(){return S.user&&S.user.id||'';}
 function normId(t){t=String(t||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(t.charAt(0)==='U')t=t.slice(1);return t?'U-'+t:'';}
 function codAcesso(uid,evid){return b36(cyrb('fluxo-balcao|'+uid+'|'+evid),8);}
 function podeBalcao(evid){return isAdmin()||!!(S.user&&S.user.balcao&&S.user.balcao[evid]);}
-function meusBalcoes(){return EVENTOS.map(function(e){return e.id;}).filter(podeBalcao);}
+function meusBalcoes(){return listaEventos().map(function(e){return e.id;}).filter(podeBalcao);}
 var PRODS=[
 {id:'b1',img:'img/antarctica.jpg',nome:'Antarctica Boa',desc:'Unidade',preco:10,cat:'Bebidas',icon:'bottle'},
 {id:'b2',img:'img/skol-beats.jpg',nome:'Skol Beats',desc:'Unidade',preco:15,cat:'Bebidas',icon:'bottle'},
@@ -203,6 +203,88 @@ var PRODS=[
 {id:'o1',img:'img/bistro.jpg',nome:'Bistrô',desc:'Mesa bistrô para o seu grupo',preco:50,cat:'Mesas',icon:'ticket'}
 ];
 var CATS=['Todos','Bebidas','Promoções','Combos','Mesas'];
+var CAT_ORD=['Bebidas','Promoções','Combos','Comidas','Mesas'];
+function iconeCat(c){return c==='Combos'?'bucket':c==='Mesas'?'ticket':c==='Comidas'?'food':'bottle';}
+function mapProd(p){return {id:p.id,nome:p.nome,desc:p.descricao||'',preco:+p.preco||0,cat:p.categoria||'Bebidas',img:p.foto||'',icon:iconeCat(p.categoria),evento:p.evento_id||null,ativo:p.ativo!==false,ordem:p.ordem||0};}
+function carregarProdutos(){if(!sb)return Promise.resolve();return sb.from('produtos').select('*').order('ordem').order('criado_em').then(function(r){if(r.error){console.error(r.error);return;}if(r.data&&r.data.length)S.prods=r.data.map(mapProd);});}
+function listaProdutos(evid,todos){var base=S.prods||PRODS.map(function(p){var x={};for(var k in p)x[k]=p[k];x.ativo=true;x.evento=null;return x;});
+return base.filter(function(p){return (todos||p.ativo)&&(evid===undefined||!p.evento||p.evento===evid);});}
+function categorias(list){var s={};list.forEach(function(p){s[p.cat]=1;});var out=CAT_ORD.filter(function(c){return s[c];});Object.keys(s).forEach(function(c){if(out.indexOf(c)<0)out.push(c);});return out;}
+function listaEventos(){var ids=EVENTOS.map(function(e){return e.id;});(S.evOrd||[]).forEach(function(i){if(ids.indexOf(i)<0&&S.evEdits[i]&&S.evEdits[i].nome)ids.push(i);});
+return ids.map(ev).filter(function(e){return isAdmin()||!e.oculto;});}
+function lerImagem(file,max,cb){if(!file||!/^image\//.test(file.type))return;var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.82));};im.src=fr.result;};fr.readAsDataURL(file);}
+function precoTxt(v){return v>0||v===0?(+v).toFixed(2).replace('.',','):'';}
+function lerPreco(t){var v=parseFloat(String(t||'').replace(/\s|R\$/g,'').replace(/\.(?=\d{3}(\D|$))/g,'').replace(',','.'));return isNaN(v)?NaN:Math.round(v*100)/100;}
+function vCardAdm(){
+if(!isAdmin())return vEventos();
+var esc0=S.escopo||'geral',evs=listaEventos();
+var lista=listaProdutos(undefined,true).filter(function(p){return esc0==='geral'?!p.evento:p.evento===esc0;});
+var h='<div class="head"><button class="round" aria-label="Voltar para os eventos" data-a="eventos">'+ic('back',20,2.4)+'</button><h1>Gerenciar cardápio</h1></div><div class="body">'
++'<div class="note"><span><b>Área do administrador</b>O cardápio geral aparece em todos os eventos. Itens de um evento aparecem só nele, junto com o geral.</span></div>'
++'<div class="chips" style="padding:0">'+[{id:'geral',nome:'Cardápio geral'}].concat(evs).map(function(e){return '<button class="chip'+(esc0===e.id?' on':'')+'" data-a="escopo" data-v="'+esc(e.id)+'">'+esc(e.nome)+'</button>';}).join('')+'</div>'
++(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')
++'<button class="cta center navy" data-a="pnovo">'+ic('plus',20,2.4)+'&nbsp; Novo produto'+(esc0==='geral'?'':' só em '+esc(ev(esc0).nome))+'</button>';
+if(!S.prods)h+='<div class="note"><span><b>Cardápio ainda não está no banco</b>Rode a atualização do banco para poder editar.</span></div>';
+if(!lista.length)h+='<div class="empty">Nenhum produto aqui ainda.</div>';
+categorias(lista).forEach(function(c){h+='<div class="eyebrow" style="margin-top:6px">'+esc(c)+'</div>';
+lista.filter(function(p){return p.cat===c;}).forEach(function(p){h+='<button class="prod" data-a="pedit" data-v="'+esc(p.id)+'" style="'+(p.ativo?'':'opacity:.55')+'"><span class="tile" style="'+(p.img?'background:#fff;border:1px solid var(--line);padding:3px':'')+'">'+pic(p,28,1.8)+'</span><span class="grow"><span class="name" style="display:block">'+esc(p.nome)+'</span><span class="price" style="display:block">'+brl(p.preco)+'</span>'+(p.ativo?'':'<span class="sub">Desativado</span>')+'</span>'+ic('edit',18,2)+'</button>';});});
+return h+'</div>';
+}
+function vProdEdit(){
+if(!isAdmin())return vEventos();
+var novo=!S.pSel,p=novo?{nome:'',desc:'',preco:'',cat:'Bebidas',img:'',evento:S.escopo&&S.escopo!=='geral'?S.escopo:null,ativo:true}:prod(S.pSel),foto=S.draft!==null?S.draft:(p.img||'');
+var cats=categorias(listaProdutos(undefined,true));CAT_ORD.forEach(function(c){if(cats.indexOf(c)<0)cats.push(c);});
+var h='<div class="head"><button class="round" aria-label="Voltar para o cardápio" data-a="cardadm">'+ic('back',20,2.4)+'</button><h1>'+(novo?'Novo produto':'Editar produto')+'</h1></div><div class="body">'
++(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')
++'<form id="pform" novalidate style="display:flex;flex-direction:column;gap:14px">'
++'<div class="lbl">Foto<img id="pe-prev" src="'+esc(foto)+'" alt="Prévia da foto" style="width:150px;height:150px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:14px;'+(foto?'':'display:none')+'"><label class="cta center line" for="pe-foto" style="height:50px;cursor:pointer">'+(foto?'Trocar foto':'Escolher foto')+'</label><input id="pe-foto" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0"></div>'
++'<label class="lbl">Nome<input class="inp" id="pe-nome" type="text" maxlength="60" value="'+esc(p.nome)+'"></label>'
++'<label class="lbl">Descrição curta<input class="inp" id="pe-desc" type="text" maxlength="160" placeholder="Ex.: Lata 350 ml" value="'+esc(p.desc||'')+'"></label>'
++'<label class="lbl">Preço em reais<input class="inp" id="pe-preco" type="text" inputmode="decimal" maxlength="10" placeholder="15,00" value="'+(novo?'':precoTxt(p.preco))+'"></label>'
++'<label class="lbl">Categoria<input class="inp" id="pe-cat" type="text" maxlength="30" list="pe-cats" value="'+esc(p.cat)+'"><datalist id="pe-cats">'+cats.map(function(c){return '<option value="'+esc(c)+'"></option>';}).join('')+'</datalist></label>'
++'<label class="lbl">Onde aparece<select class="inp" id="pe-ev"><option value="">Cardápio geral (todos os eventos)</option>'+listaEventos().map(function(e){return '<option value="'+esc(e.id)+'"'+(p.evento===e.id?' selected':'')+'>Só em '+esc(e.nome)+'</option>';}).join('')+'</select></label>'
++'<label class="row" for="pe-ativo" style="gap:12px;min-height:44px"><input id="pe-ativo" type="checkbox" style="width:22px;height:22px;accent-color:var(--blue)"'+(p.ativo!==false?' checked':'')+'><span>Disponível para venda</span></label>'
++'<button class="cta center navy" type="submit">Salvar produto</button></form></div>';
+return h;
+}
+function salvarProduto(){
+if(!isAdmin()||S.ocupado)return;
+var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
+var nome=g('pe-nome'),preco=lerPreco(g('pe-preco')),cat=g('pe-cat')||'Bebidas';
+if(nome.length<2){S.aviso='Dê um nome ao produto.';return render();}
+if(isNaN(preco)||preco<0){S.aviso='Digite o preço, por exemplo 15,00.';return render();}
+var row={nome:nome.slice(0,60),descricao:g('pe-desc').slice(0,160),preco:preco,categoria:cat.slice(0,30),evento_id:g('pe-ev')||null,ativo:!!(document.getElementById('pe-ativo')||{}).checked};
+if(S.draft!==null)row.foto=S.draft;
+if(S.pSel)row.id=S.pSel;else row.ordem=1000;
+S.ocupado=true;S.aviso='';
+sb.from('produtos').upsert(row).then(function(r){S.ocupado=false;if(r.error){console.error(r.error);S.aviso='Não foi possível salvar: '+r.error.message;return render();}
+S.draft=null;return carregarProdutos().then(function(){S.escopo=row.evento_id||'geral';go('cardadm');});});
+}
+function carregarAdmins(){if(!sb||!S.user||!S.user.super)return;sb.rpc('listar_admins').then(function(r){if(r.error){console.error(r.error);S.aviso='Não foi possível carregar a lista: '+r.error.message;}else S.admins=r.data||[];if(S.view==='admins')render();});}
+function vAdmins(){
+if(!S.user||!S.user.super)return vEventos();
+var l=S.admins;
+var h='<div class="head"><button class="round" aria-label="Voltar para os eventos" data-a="eventos">'+ic('back',20,2.4)+'</button><h1>Administradores</h1></div><div class="body">'
++'<div class="note"><span><b>Só o administrador máximo vê esta tela</b>Administradores editam eventos, cardápio e a equipe do balcão. Só você dá e tira esse acesso.</span></div>'
++'<form id="admform" novalidate style="display:flex;flex-direction:column;gap:12px"><label class="lbl">ID do usuário<input class="field" id="adm-id" type="text" autocomplete="off" placeholder="U-XXXXXXXX" style="font-size:18px"></label><div class="sub">A pessoa encontra o próprio ID em Meu perfil.</div>'
++(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')+(S.ok?'<div class="note" role="status" style="background:#DDF3E7;color:var(--ok)"><span>'+esc(S.ok)+'</span></div>':'')
++'<button class="cta center navy" type="submit">Tornar administrador</button></form>'
++'<div class="sora" style="font-weight:700;font-size:16px;margin-top:6px">Administradores'+(l?' ('+l.length+')':'')+'</div>';
+if(!l)h+='<div class="note"><span class="spin"></span><span>Carregando...</span></div>';
+else l.forEach(function(u){var eu=S.user&&u.id===S.user.uid;h+='<div class="prod"><span class="tile sora" style="width:44px;height:44px;border-radius:50%;background:'+(u.super?'#FFD23F':'var(--navy)')+';color:'+(u.super?'#0A1F4D':'#fff')+';font-weight:800">'+esc((u.nome||'?').charAt(0).toUpperCase())+'</span><span class="grow"><span class="name" style="display:block;font-weight:700">'+esc(u.nome)+(eu?' (você)':'')+'</span><span class="sub">'+esc(u.codigo)+' · '+(u.super?'Administrador máximo':'Administrador')+'</span></span>'+(u.super||eu?'':'<button class="pill" style="border:1px solid var(--line2)" data-a="adm-rem" data-v="'+esc(u.codigo)+'">Remover</button>')+'</div>';});
+return h+'</div>';
+}
+function definirAdmin(cod,on){
+if(!S.user||!S.user.super||S.ocupado)return;
+cod=normId(cod);if(cod.length<6){S.aviso='Digite o ID do usuário, no formato U-XXXXXXXX.';S.ok='';return render();}
+S.ocupado=true;S.aviso='';S.ok='';
+sb.rpc('definir_admin',{p_codigo:cod,p_admin:on}).then(function(r){S.ocupado=false;
+if(r.error){S.aviso='Não foi possível alterar: '+r.error.message;return render();}
+var d=r.data||{},M={inexistente:'Nenhuma conta com o ID '+cod+'.',proprio:'Você não pode alterar o seu próprio acesso.',super:'O administrador máximo não pode ser alterado.',sem_permissao:'Só o administrador máximo pode fazer isso.'};
+if(d.status!=='ok'){S.aviso=M[d.status]||'Não foi possível alterar.';return render();}
+S.ok=on?d.nome+' agora é administrador.':d.nome+' não é mais administrador.';carregarAdmins();render();});
+}
+
 
 var KEY='fluxo-demo-v2';
 var S={view:'menu',cat:'Todos',busca:'',item:null,qtd:1,pag:'pix',cart:{},fichas:[],aba:'disp',ficha:null,leitura:null,codigo:'',evento:'e1',sheet:false,evEdits:{},evSel:null,draft:null,equipe:{},bev:null,ultCod:null,aviso:''};
@@ -215,16 +297,16 @@ var APP_URL=location.origin+location.pathname,VEIO_RECUP=/type=recovery/.test(lo
 var sb=null;try{sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,storageKey:'fluxo-auth'}});sb.auth.onAuthStateChange(function(ev){if(ev==='PASSWORD_RECOVERY'){S.recuperando=true;S.auth='novasenha';S.user=null;S.carregando=false;S.erro='';S.info='';render();}});}catch(e){}
 function falha(msg,err){if(err)console.error(err);S.erro=msg+(err&&err.message?' ('+err.message+')':'');S.ocupado=false;render();}
 function mapFicha(f){return {codigo:f.codigo,prod:f.produto,ev:f.evento_id,usada:f.usada};}
-function carregarEventos(){if(!sb)return Promise.resolve();return sb.from('eventos').select('id,dados').then(function(r){if(r.error){console.error(r.error);return;}S.evEdits={};(r.data||[]).forEach(function(x){S.evEdits[x.id]=x.dados||{};});});}
+function carregarEventos(){if(!sb)return Promise.resolve();return sb.from('eventos').select('*').then(function(r){if(r.error){console.error(r.error);return;}S.evEdits={};var rows=(r.data||[]).slice().sort(function(a,b){return String(a.criado_em||'').localeCompare(String(b.criado_em||''));});S.evOrd=rows.map(function(x){return x.id;});rows.forEach(function(x){S.evEdits[x.id]=x.dados||{};});});}
 function carregarConta(uid){
 return Promise.all([
-sb.from('perfis').select('id,codigo,nome,cpf,foto,admin').eq('id',uid).single(),
+sb.from('perfis').select('*').eq('id',uid).single(),
 sb.from('fichas').select('codigo,produto,evento_id,usada').eq('usuario_id',uid).order('criado_em',{ascending:false}),
 sb.from('equipe').select('evento_id').eq('usuario_id',uid),
 carregarEventos()
 ]).then(function(rs){
 var p=rs[0];if(p.error||!p.data)throw p.error||new Error('perfil não encontrado');
-var d=p.data;S.user={uid:d.id,id:d.codigo,nome:d.nome,admin:!!d.admin,cpfFim:String(d.cpf||'').slice(9),balcao:{},email:''};if(d.foto)S.user.foto=d.foto;
+var d=p.data;S.user={uid:d.id,id:d.codigo,nome:d.nome,admin:!!d.admin,super:!!d.super,cpfFim:String(d.cpf||'').slice(9),balcao:{},email:''};if(d.foto)S.user.foto=d.foto;
 S.fichas=(rs[1].data||[]).map(mapFicha);
 (rs[2].data||[]).forEach(function(x){S.user.balcao[x.evento_id]=true;});
 return sb.auth.getUser().then(function(u){S.user.email=u&&u.data&&u.data.user&&u.data.user.email||'';});
@@ -236,7 +318,7 @@ function carregarCompradores(id){if(!sb||!S.user)return;sb.rpc('compradores',{p_
 function carregarEquipe(id){if(!sb||!isAdmin())return;sb.from('equipe').select('usuario_id,nome,perfis(codigo)').eq('evento_id',id).order('criado_em').then(function(r){if(r.error){console.error(r.error);S.aviso='Não foi possível carregar a equipe.';}else S.eq[id]=(r.data||[]).map(function(x){return {uid:x.usuario_id,nome:x.nome,id:x.perfis&&x.perfis.codigo||''};});if(S.view==='equipe')render();});}
 function iniciar(){
 if(!sb){S.carregando=false;S.erro='Não foi possível carregar o sistema de contas. Confira a internet e recarregue a página.';return render();}
-carregarEventos().then(function(){return sb.auth.getSession();}).then(function(r){var ss=r&&r.data&&r.data.session;
+carregarEventos().then(carregarProdutos).then(function(){return sb.auth.getSession();}).then(function(r){var ss=r&&r.data&&r.data.session;
 if(VEIO_RECUP||S.recuperando){S.carregando=false;S.recuperando=true;S.auth='novasenha';S.view='login';return render();}
 if(!ss){S.carregando=false;S.view='login';return render();}
 return carregarConta(ss.user.id).then(function(){S.carregando=false;S.view='eventos';render();});
@@ -334,7 +416,7 @@ return depois(r.data.user.id);
 
 function pic(p,s,w){return p.img?'<img src="'+p.img+'" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:inherit">':ic(p.icon,s,w);}
 function brl(v){return 'R$ '+v.toFixed(2).replace('.',',');}
-function prod(id){if(String(id).indexOf('ing-')===0){var e=ev(id.slice(4));return {id:id,nome:'Ingresso '+e.nome,desc:e.lote||'Ingresso',preco:+e.preco||0,cat:'Ingressos',icon:'ticket',ing:true,ev:e.id,img:e.banner||''};}for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return {id:id,nome:String(id),desc:'',preco:0,cat:'',icon:'ticket'};}
+function prod(id){if(String(id).indexOf('ing-')===0){var e=ev(id.slice(4));return {id:id,nome:'Ingresso '+e.nome,desc:e.lote||'Ingresso',preco:+e.preco||0,cat:'Ingressos',icon:'ticket',ing:true,ev:e.id,img:e.banner||''};}if(S.prods)for(var j=0;j<S.prods.length;j++)if(S.prods[j].id===id)return S.prods[j];for(var i=0;i<PRODS.length;i++)if(PRODS[i].id===id)return PRODS[i];return {id:id,nome:String(id),desc:'',preco:0,cat:'',icon:'ticket'};}
 function cartCount(){var n=0;for(var k in S.cart)n+=S.cart[k];return n;}
 function cartTotal(){var t=0;for(var k in S.cart)t+=S.cart[k]*prod(k).preco;return t;}
 function novoCodigo(){var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',s='';for(var i=0;i<8;i++){s+=a[Math.floor(Math.random()*a.length)];}return 'FLX-'+s.slice(0,4)+'-'+s.slice(4);}
@@ -360,12 +442,13 @@ function go0(v,extra){if(v==='fichas'||v==='perfil'){if(['eventos','menu','event
 
 function vMenu(){
 var q=S.busca.trim().toLowerCase();
-var list=PRODS.filter(function(p){return (S.cat==='Todos'||p.cat===S.cat)&&(!q||p.nome.toLowerCase().indexOf(q)>=0);});
+var todos0=listaProdutos(S.evento),CATS=['Todos'].concat(categorias(todos0));if(CATS.indexOf(S.cat)<0)S.cat='Todos';
+var list=todos0.filter(function(p){return (S.cat==='Todos'||p.cat===S.cat)&&(!q||p.nome.toLowerCase().indexOf(q)>=0);});
 var disp=S.fichas.filter(function(f){return !f.usada;}).length;
 var h='<div class="top"><div class="row between"><button class="round dark" aria-label="Voltar para os eventos" data-a="eventos">'+ic('back',20,2.4)+'</button><div class="row" style="gap:8px"><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button><button class="round dark" aria-label="Abrir menu" data-a="sheet">'+ic('dots',22)+'</button></div></div>'
 +'<div><div class="eyebrow">Cardápio de</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">'+esc(ev(S.evento).nome)+'</div></div>'
 +'<div class="search">'+ic('search',18)+'<input id="busca" type="search" aria-label="Buscar no cardápio" placeholder="Buscar no cardápio" value="'+esc(S.busca)+'"></div></div>';
-h+='<div class="chips">'+CATS.map(function(c){return '<button class="chip'+(S.cat===c?' on':'')+'" data-a="cat" data-v="'+c+'">'+c+'</button>';}).join('')+'</div>';
+h+='<div class="chips">'+CATS.map(function(c){return '<button class="chip'+(S.cat===c?' on':'')+'" data-a="cat" data-v="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div>';
 h+='<div class="body"><div class="sora" style="font-weight:700;font-size:16px">Cardápio</div>';
 if(!list.length)h+='<div class="empty">Nenhum item encontrado.</div>';
 list.forEach(function(p){h+='<button class="prod" data-a="item" data-v="'+p.id+'"><span class="tile" style="'+(p.img?'background:#fff;border:1px solid var(--line);padding:3px':'')+'">'+pic(p,28,1.8)+'</span><span class="grow"><span class="name" style="display:block">'+p.nome+'</span><span class="sub" style="display:block">'+p.desc+'</span><span class="price" style="display:block">'+brl(p.preco)+'</span></span><span class="round solid">'+ic('plus',20,2.4)+'</span></button>';});
@@ -408,16 +491,16 @@ return '<div class="head"><button class="round" aria-label="Voltar ao pedido" da
 
 function vEventos(){
 var q=(S.buscaEv||'').trim().toLowerCase();
-var list=EVENTOS.map(function(e){return ev(e.id);}).filter(function(e){return !q||e.nome.toLowerCase().indexOf(q)>=0||e.onde.toLowerCase().indexOf(q)>=0;});
+var list=listaEventos().filter(function(e){return !q||e.nome.toLowerCase().indexOf(q)>=0||e.onde.toLowerCase().indexOf(q)>=0;});
 var disp=S.fichas.filter(function(f){return !f.usada;}).length;
-var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><div class="row" style="gap:8px"><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button><button class="round dark" aria-label="Abrir menu" data-a="sheet">'+ic('dots',22)+'</button></div></div><div><div class="eyebrow">Olá, '+esc(S.user?S.user.nome.split(' ')[0]:'cliente')+(isAdmin()?' <span style="background:#fff;color:#0A1F4D;border-radius:8px;padding:2px 8px;margin-left:4px">Admin</span>':'')+'</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">Onde é a festa hoje?</div></div><div class="search">'+ic('search',18)+'<input id="buscaev" type="search" aria-label="Buscar eventos" placeholder="Busque eventos ou cidades" value="'+esc(S.buscaEv||'')+'"></div></div><div class="body" style="padding-top:20px;gap:18px"><h1 style="margin:0;font-size:22px">Selecione o evento</h1>';
+var h='<div class="top"><div class="row between"><div class="brand">FLUXO</div><div class="row" style="gap:8px"><button class="pill" data-a="fichas">'+ic('ticket',18)+'Minhas fichas'+(disp?' ('+disp+')':'')+'</button><button class="round dark" aria-label="Abrir menu" data-a="sheet">'+ic('dots',22)+'</button></div></div><div><div class="eyebrow">Olá, '+esc(S.user?S.user.nome.split(' ')[0]:'cliente')+(isAdmin()?' <span style="background:#fff;color:#0A1F4D;border-radius:8px;padding:2px 8px;margin-left:4px">Admin</span>':'')+'</div><div class="sora" style="font-weight:700;font-size:20px;margin-top:4px">Onde é a festa hoje?</div></div><div class="search">'+ic('search',18)+'<input id="buscaev" type="search" aria-label="Buscar eventos" placeholder="Busque eventos ou cidades" value="'+esc(S.buscaEv||'')+'"></div></div><div class="body" style="padding-top:20px;gap:18px"><h1 style="margin:0;font-size:22px">Selecione o evento</h1>'+(isAdmin()?'<button class="cta center line" style="height:52px" data-a="ev-novo">'+ic('plus',20,2.4)+'&nbsp; Novo evento</button>':'');
 if(!list.length)h+='<div class="empty">Nenhum evento encontrado.</div>';
 list.forEach(function(e){var on=e.id===S.evento;
 h+='<div class="evcard" style="background:'+e.cor+'">'
 +(e.banner?'<img src="'+e.banner+'" alt="" class="evbg">':'<span class="evbig sora" style="color:'+e.tx+'" aria-hidden="true">'+esc(e.sig)+'</span>')
 +'<span class="evscrim"></span>'
 +'<button class="evhit" data-a="ev-abrir" data-v="'+e.id+'" aria-label="Ver o evento '+esc(e.nome)+'"></button>'
-+(on?'<span class="evbadge"><i></i>Você está aqui</span>':'')
++(on?'<span class="evbadge"><i></i>Você está aqui</span>':e.oculto?'<span class="evbadge" style="background:#A32020">Oculto para clientes</span>':'')
 +(isAdmin()?'<button class="evbtn" style="left:14px;top:14px" aria-label="Editar '+esc(e.nome)+'" data-a="ev-editar" data-v="'+e.id+'">'+ic('edit',16,2)+'Editar</button>':'')
 +'<span class="evinfo"><span class="evdate">'+ic('cal',14,2)+esc(e.quando)+' · '+esc(e.onde)+'</span><span class="evname sora">'+esc(e.nome)+'</span></span>'
 +'</div>';});
@@ -455,13 +538,13 @@ return h;
 }
 function vEvEdit(){
 if(!isAdmin())return vEventos();
-var e=ev(S.evSel),bn=S.draft!==null?S.draft:(e.banner||'');
-return '<div class="head"><button class="round" aria-label="Voltar para o evento" data-a="ev-abrir" data-v="'+e.id+'">'+ic('back',20,2.4)+'</button><h1>Editar evento</h1></div><div class="body"><div class="note"><span><b>Área do administrador</b>Clientes não veem esta tela. As alterações valem para todos os aparelhos.</span></div>'
+var e=ev(S.evSel),bn=S.draft!==null?S.draft:(e.banner||''),nv=e.custom&&!S.evEdits[e.id];
+return '<div class="head"><button class="round" aria-label="Voltar para o evento" data-a="ev-abrir" data-v="'+e.id+'">'+ic('back',20,2.4)+'</button><h1>'+(e.custom&&!S.evEdits[e.id]?'Novo evento':'Editar evento')+'</h1></div><div class="body"><div class="note"><span><b>Área do administrador</b>Clientes não veem esta tela. As alterações valem para todos os aparelhos.</span></div>'
 +(S.aviso?'<div class="err" role="alert">'+esc(S.aviso)+'</div>':'')+'<form id="evform" novalidate style="display:flex;flex-direction:column;gap:14px">'
 +'<div class="lbl">Banner<img id="ee-prev" src="'+bn+'" alt="Prévia do banner" style="width:100%;border-radius:14px;'+(bn?'':'display:none')+'"><label class="cta center line" for="ee-banner" style="height:52px;cursor:pointer">Escolher imagem</label><input id="ee-banner" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0"></div>'
-+'<label class="lbl">Nome do evento<input class="inp" id="ee-nome" type="text" maxlength="60" value="'+esc(e.nome)+'"></label>'
-+'<label class="lbl">Data e hora<input class="inp" id="ee-quando" type="text" maxlength="40" placeholder="Ex.: Sáb, 12 Dez · 22:00" value="'+esc(e.quando)+'"></label>'
-+'<label class="lbl">Cidade<input class="inp" id="ee-onde" type="text" maxlength="40" value="'+esc(e.onde)+'"></label>'
++'<label class="lbl">Nome do evento<input class="inp" id="ee-nome" type="text" maxlength="60" placeholder="Ex.: Baile de Verão" value="'+esc(nv?'':e.nome)+'"></label>'
++'<label class="lbl">Data e hora<input class="inp" id="ee-quando" type="text" maxlength="40" placeholder="Ex.: Sáb, 12 Dez · 22:00" value="'+esc(nv?'':e.quando)+'"></label>'
++'<label class="lbl">Cidade<input class="inp" id="ee-onde" type="text" maxlength="40" placeholder="Ex.: Assis" value="'+esc(nv?'':e.onde)+'"></label>'
 +'<label class="lbl">Endereço ou local (abre no Google Maps)<input class="inp" id="ee-local" type="text" maxlength="120" placeholder="Ex.: Rua tal, 123, Assis - SP" value="'+esc(e.local||'')+'"></label>'
 +'<label class="lbl">Instagram da festa (@usuario ou link)<input class="inp" id="ee-insta" type="text" maxlength="120" placeholder="@suafesta" value="'+esc(e.insta||'')+'"></label>'
 +'<label class="lbl">Organizador<input class="inp" id="ee-org" type="text" maxlength="60" value="'+esc(e.org||'')+'"></label>'
@@ -469,7 +552,7 @@ return '<div class="head"><button class="round" aria-label="Voltar para o evento
 +'<label class="lbl">Preço do ingresso em reais (vazio = sem venda)<input class="inp" id="ee-preco" type="text" inputmode="decimal" maxlength="8" placeholder="25,00" value="'+(+e.preco>0?(+e.preco).toFixed(2).replace('.',','):'')+'"></label>'
 +'<label class="lbl">Descrição<textarea class="inp" id="ee-desc" rows="6" maxlength="800" style="height:auto;padding:12px 14px;font-family:inherit;line-height:1.45">'+esc(e.desc||'')+'</textarea></label>'
 +'<button class="cta center navy" type="submit">Salvar alterações</button></form>'
-+'<button class="linkbtn" style="align-self:center" data-a="ev-reset" data-v="'+e.id+'">Restaurar o evento original</button></div>';
++(e.custom?(S.evEdits[e.id]?'<button class="linkbtn" style="align-self:center" data-a="ev-ocultar" data-v="'+e.id+'">'+(e.oculto?'Mostrar o evento para os clientes':'Ocultar o evento dos clientes')+'</button>':''):'<button class="linkbtn" style="align-self:center" data-a="ev-reset" data-v="'+e.id+'">Restaurar o evento original</button>')+'</div>';
 }
 function autorizar(){
 if(!isAdmin()||S.ocupado)return;
@@ -489,11 +572,12 @@ function salvarEvento(){
 if(!isAdmin())return go('eventos');
 var g=function(id){var n=document.getElementById(id);return n?n.value.trim():'';};
 var id=ev(S.evSel).id,o=JSON.parse(JSON.stringify(S.evEdits[id]||{})),nome=g('ee-nome');
+if(ev(id).custom&&!S.evEdits[id]&&nome.length<2){S.aviso='Dê um nome ao evento.';return render();}
 if(nome)o.nome=nome;
 o.quando=g('ee-quando')||'[DATA E HORA]';o.onde=g('ee-onde')||'[CIDADE]';o.desc=g('ee-desc');o.local=g('ee-local');o.insta=g('ee-insta').replace(/[<>"'\s]/g,'');o.org=g('ee-org');o.lote=g('ee-lote');var pv=parseFloat(g('ee-preco').replace(/\./g,'').replace(',','.'));o.preco=pv>0?Math.round(pv*100)/100:0;
 if(S.draft!==null)o.banner=S.draft;
 var w=nome.split(/\s+/);o.sig=((w[0]||'').charAt(0)+(w[1]||'').charAt(0)).toUpperCase()||ev(id).sig;
-S.draft=null;S.aviso='';sb.from('eventos').upsert({id:id,dados:o,atualizado_em:new Date().toISOString()}).then(function(r){if(r.error){console.error(r.error);S.aviso='Não foi possível salvar: '+r.error.message;return render();}S.evEdits[id]=o;go('evento');});
+S.draft=null;S.aviso='';sb.from('eventos').upsert({id:id,dados:o,atualizado_em:new Date().toISOString()}).then(function(r){if(r.error){console.error(r.error);S.aviso='Não foi possível salvar: '+r.error.message;return render();}S.evEdits[id]=o;if((S.evOrd||[]).indexOf(id)<0)(S.evOrd=S.evOrd||[]).push(id);go('evento');});
 }
 function lerBanner(file){
 if(!file||!/^image\//.test(file.type))return;
@@ -515,7 +599,7 @@ c.getContext('2d').drawImage(im,(im.width-d)/2,(im.height-d)/2,d,d,0,0,240,240);
 function vPerfil(){
 var d=S.fichas.filter(function(f){return !f.usada;}).length,u=S.fichas.length-d,n=S.user?S.user.nome:'cliente';
 return '<div class="head"><button class="round" aria-label="Voltar" data-a="voltar">'+ic('back',20,2.4)+'</button><h1>Meu perfil</h1></div><div class="body">'
-+'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+(S.user&&S.user.cpfFim?' · CPF ***.***.***-'+esc(S.user.cpfFim):'')+'</div>'+(S.user&&S.user.email?'<div class="sub">'+esc(S.user.email)+'</div>':'')+'</div></div>'
++'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.super?'Administrador máximo':S.user&&S.user.admin?'Administrador':'Conta de cliente')+(S.user&&S.user.cpfFim?' · CPF ***.***.***-'+esc(S.user.cpfFim):'')+'</div>'+(S.user&&S.user.email?'<div class="sub">'+esc(S.user.email)+'</div>':'')+'</div></div>'
 +'<div class="row" style="gap:10px;flex-wrap:wrap"><label class="pill" for="pf-foto" style="border:1px solid var(--line2);cursor:pointer">'+ic('user',18)+(S.user&&S.user.foto?'Trocar foto':'Escolher foto')+'</label><input id="pf-foto" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0">'+(S.user&&S.user.foto?'<button class="linkbtn" data-a="foto-rem">Remover foto</button>':'')+'</div></div>'
 +'<div class="box row between" style="gap:12px"><div><div class="eyebrow">Meu ID de usuário</div><div class="code" style="margin-top:4px">'+meuId()+'</div></div><button class="pill" style="border:1px solid var(--line2)" data-a="copiar" data-v="'+esc(meuId())+'">Copiar</button></div>'
 +'<div class="row" style="gap:12px"><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+d+'</div><div class="sub">fichas disponíveis</div></div><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+u+'</div><div class="sub">fichas usadas</div></div></div>'
@@ -526,7 +610,7 @@ return '<div class="head"><button class="round" aria-label="Voltar" data-a="volt
 function vSheet(){
 function it(a,icn,t,sub){return '<button class="prod" style="border:0;padding:10px 6px" data-a="'+a+'"><span class="tile" style="width:46px;height:46px">'+ic(icn,22,2)+'</span><span class="grow"><span class="name" style="display:block">'+t+'</span>'+(sub?'<span class="sub">'+sub+'</span>':'')+'</span>'+ic('next',18,2.4)+'</button>';}
 return '<div class="shade" data-a="fechar"></div><div class="sheet" role="dialog" aria-label="Menu"><div class="row between" style="padding:0 6px 6px"><div class="sora" style="font-weight:700;font-size:18px">Menu</div><button class="round" aria-label="Fechar menu" data-a="fechar">'+ic('x',18,2.4)+'</button></div>'
-+it('menu','list','Cardápio')+it('fichas','ticket','Minhas fichas')+it('eventos','cal','Eventos',esc(ev(S.evento).nome))+it('perfil','user','Meu perfil')+it('balcao','scan','Modo balcão','Só para a equipe autorizada')+it('sair','out','Sair da conta')+'</div>';
++it('menu','list','Cardápio')+it('fichas','ticket','Minhas fichas')+it('eventos','cal','Eventos',esc(ev(S.evento).nome))+it('perfil','user','Meu perfil')+it('balcao','scan','Modo balcão','Só para a equipe autorizada')+(isAdmin()?it('cardadm','list','Gerenciar cardápio','Produtos, preços e fotos'):'')+(S.user&&S.user.super?it('admins','user','Administradores','Dar e tirar acesso de admin'):'')+it('sair','out','Sair da conta')+'</div>';
 }
 function ticketHtml(f){
 return '<button class="ticket" data-a="abrir" data-v="'+f.codigo+'"'+(f.usada?' disabled':'')+'><span class="stub'+(f.usada?' used':'')+'">'+ic(prod(f.prod).icon,30,1.8)+'</span><span class="dash"></span><span class="grow" style="padding:14px;display:flex;flex-direction:column;gap:4px;justify-content:center"><span class="name" style="font-weight:700">'+prod(f.prod).nome+'</span><span class="sub">Ficha '+f.codigo+'</span><span class="sub">'+esc(ev(f.ev).nome)+'</span>'
@@ -635,7 +719,7 @@ render();
 function render(){
 if(S.carregando){app.innerHTML='<div class="login" style="justify-content:center;align-items:center;gap:22px"><img src="logo.png" alt="Fluxo. Seu bar. Sem filas."><span class="spin"></span></div>';return;}
 if(!S.user)S.view='login';
-var v={login:vLogin,evento:vEvento,evedit:vEvEdit,eventos:vEventos,perfil:vPerfil,menu:vMenu,item:vItem,pedido:vPedido,pix:vPix,fichas:vFichas,ficha:vFicha,balcao:vBalcao,equipe:vEquipe}[S.view]();
+var v={login:vLogin,evento:vEvento,evedit:vEvEdit,eventos:vEventos,perfil:vPerfil,menu:vMenu,item:vItem,pedido:vPedido,pix:vPix,fichas:vFichas,ficha:vFicha,balcao:vBalcao,equipe:vEquipe,cardadm:vCardAdm,pedit:vProdEdit,admins:vAdmins}[S.view]();
 app.innerHTML='<div class="demo">Versão de teste · pagamento simulado</div>'+v+(S.sheet&&S.user?vSheet():'');
 if(S.view==='ficha'&&document.getElementById('qrbox')){tickQr();if(!timer)timer=setInterval(tickQr,500);}
 }
@@ -652,6 +736,14 @@ else if(a==='perfil')go('perfil');
 else if(a==='evento'){S.evento=v;save();go('menu');}
 else if(a==='ingresso'){var ki='ing-'+v;S.cart[ki]=(S.cart[ki]||0)+1;save();go('pedido');}
 else if(a==='foto-rem'){if(S.user&&sb)sb.from('perfis').update({foto:null}).eq('id',S.user.uid).then(function(r){if(!r.error){delete S.user.foto;render();}});}
+else if(a==='ev-novo'){if(isAdmin())go('evedit',{evSel:'ev'+Date.now().toString(36),draft:null,aviso:''});}
+else if(a==='ev-ocultar'){if(isAdmin()){var oo=JSON.parse(JSON.stringify(S.evEdits[v]||{}));oo.oculto=!oo.oculto;sb.from('eventos').upsert({id:v,dados:oo,atualizado_em:new Date().toISOString()}).then(function(r){if(r.error){S.aviso='Não foi possível alterar: '+r.error.message;return render();}S.evEdits[v]=oo;go('evento',{evSel:v});});}}
+else if(a==='cardadm'){if(isAdmin()){go('cardadm',{aviso:'',draft:null});carregarProdutos().then(render);}}
+else if(a==='escopo'){S.escopo=v;render();}
+else if(a==='pnovo'){if(isAdmin())go('pedit',{pSel:null,draft:null,aviso:''});}
+else if(a==='pedit'){if(isAdmin())go('pedit',{pSel:v,draft:null,aviso:''});}
+else if(a==='admins'){if(S.user&&S.user.super){go('admins',{aviso:'',ok:'',admins:null});carregarAdmins();}}
+else if(a==='adm-rem'){definirAdmin(v,false);}
 else if(a==='ev-abrir'){go('evento',{evSel:v,draft:null,aviso:''});carregarCompradores(v);}
 else if(a==='ev-editar'){if(isAdmin())go('evedit',{evSel:v,draft:null});}
 else if(a==='ev-reset'){if(isAdmin()&&sb)sb.from('eventos').delete().eq('id',v).then(function(r){if(r.error){S.aviso='Não foi possível restaurar: '+r.error.message;return render();}delete S.evEdits[v];go('evento',{evSel:v,draft:null});});}
@@ -691,8 +783,8 @@ else if(e.target.id==='buscaev'){S.buscaEv=e.target.value;var p2=e.target.select
 else if(e.target.id==='f-cpf'){e.target.value=maskCpf(e.target.value);}
 else if(e.target.id==='f-cel'){e.target.value=maskCel(e.target.value);}
 });
-app.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='authform')autenticar();else if(e.target.id==='evform')salvarEvento();else if(e.target.id==='eqform')autorizar();});
-app.addEventListener('change',function(e){if(e.target.name==='pag'){S.pag=e.target.value;render();}else if(e.target.id==='ee-banner'){lerBanner(e.target.files&&e.target.files[0]);}else if(e.target.id==='pf-foto'){lerFoto(e.target.files&&e.target.files[0]);}});
+app.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='authform')autenticar();else if(e.target.id==='evform')salvarEvento();else if(e.target.id==='eqform')autorizar();else if(e.target.id==='pform')salvarProduto();else if(e.target.id==='admform'){var ai=document.getElementById('adm-id');definirAdmin(ai?ai.value:'',true);}});
+app.addEventListener('change',function(e){if(e.target.name==='pag'){S.pag=e.target.value;render();}else if(e.target.id==='ee-banner'){lerBanner(e.target.files&&e.target.files[0]);}else if(e.target.id==='pe-foto'){lerImagem(e.target.files&&e.target.files[0],500,function(u){S.draft=u;var pv=document.getElementById('pe-prev');if(pv){pv.src=u;pv.style.display='block';}});}else if(e.target.id==='pf-foto'){lerFoto(e.target.files&&e.target.files[0]);}});
 app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='cod'){validar(e.target.value);}});
 iniciar();
 })();
