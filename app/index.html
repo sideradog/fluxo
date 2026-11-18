@@ -256,7 +256,7 @@ return '<svg role="img" aria-label="QR ilustrativo da ficha" width="220" height=
 
 var app=document.getElementById('app');
 var timer=null;
-function go(v,extra){if(timer){clearInterval(timer);timer=null;}S.view=v;if(extra)for(var k in extra)S[k]=extra[k];render();window.scrollTo(0,0);}
+function go(v,extra){if(v==='fichas'||v==='perfil'){if(['eventos','menu','evento'].indexOf(S.view)>=0)S.volta=S.view;else if(S.view==='pix')S.volta='menu';}if(timer){clearInterval(timer);timer=null;}S.view=v;if(extra)for(var k in extra)S[k]=extra[k];render();window.scrollTo(0,0);}
 
 function vMenu(){
 var q=S.busca.trim().toLowerCase();
@@ -410,7 +410,7 @@ c.getContext('2d').drawImage(im,(im.width-d)/2,(im.height-d)/2,d,d,0,0,240,240);
 }
 function vPerfil(){
 var d=S.fichas.filter(function(f){return !f.usada;}).length,u=S.fichas.length-d,n=S.user?S.user.nome:'cliente';
-return '<div class="head"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1>Meu perfil</h1></div><div class="body">'
+return '<div class="head"><button class="round" aria-label="Voltar" data-a="voltar">'+ic('back',20,2.4)+'</button><h1>Meu perfil</h1></div><div class="body">'
 +'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+'</div></div></div>'
 +'<div class="row" style="gap:10px;flex-wrap:wrap"><label class="pill" for="pf-foto" style="border:1px solid var(--line2);cursor:pointer">'+ic('user',18)+(S.user&&S.user.foto?'Trocar foto':'Escolher foto')+'</label><input id="pf-foto" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0">'+(S.user&&S.user.foto?'<button class="linkbtn" data-a="foto-rem">Remover foto</button>':'')+'</div></div>'
 +'<div class="box row between" style="gap:12px"><div><div class="eyebrow">Meu ID de usuário</div><div class="code" style="margin-top:4px">'+meuId()+'</div></div><button class="pill" style="border:1px solid var(--line2)" data-a="copiar" data-v="'+meuId()+'">Copiar</button></div>'
@@ -431,7 +431,7 @@ return '<button class="ticket" data-a="abrir" data-v="'+f.codigo+'"'+(f.usada?' 
 function vFichas(){
 var d=S.fichas.filter(function(f){return !f.usada;}),u=S.fichas.filter(function(f){return f.usada;});
 var list=S.aba==='disp'?d:u;
-var h='<div class="top"><div class="row" style="gap:12px"><button class="round dark" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1 style="margin:0;font-size:22px">Minhas fichas</h1></div><div class="seg"><button class="'+(S.aba==='disp'?'on':'')+'" data-a="aba" data-v="disp">Disponíveis ('+d.length+')</button><button class="'+(S.aba==='usadas'?'on':'')+'" data-a="aba" data-v="usadas">Usadas ('+u.length+')</button></div></div><div class="body" style="padding-top:20px">';
+var h='<div class="top"><div class="row" style="gap:12px"><button class="round dark" aria-label="Voltar" data-a="voltar">'+ic('back',20,2.4)+'</button><h1 style="margin:0;font-size:22px">Minhas fichas</h1></div><div class="seg"><button class="'+(S.aba==='disp'?'on':'')+'" data-a="aba" data-v="disp">Disponíveis ('+d.length+')</button><button class="'+(S.aba==='usadas'?'on':'')+'" data-a="aba" data-v="usadas">Usadas ('+u.length+')</button></div></div><div class="body" style="padding-top:20px">';
 if(!list.length)h+='<div class="empty">'+(S.aba==='disp'?'Você ainda não tem fichas disponíveis.':'Nenhuma ficha usada ainda.')+'</div>';
 list.forEach(function(f){h+=ticketHtml(f);});
 h+='</div><div class="foot"><button class="cta center" data-a="menu">Comprar mais</button></div>';
@@ -512,6 +512,7 @@ app.addEventListener('click',function(e){
 var b=e.target.closest('[data-a]');if(!b)return;var a=b.getAttribute('data-a'),v=b.getAttribute('data-v');
 S.sheet=false;
 if(a==='sheet'){S.sheet=true;render();}
+else if(a==='voltar')go(S.volta||'eventos');
 else if(a==='fechar'){render();}
 else if(a==='eventos')go('eventos');
 else if(a==='perfil')go('perfil');
