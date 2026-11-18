@@ -334,6 +334,8 @@ var h='<div class="evpage"><div class="evhero'+(e.banner?' hasimg':'')+'" style=
 if(paras.length){h+='<div class="evsec"><h2>Sobre a festa</h2>';paras.forEach(function(p){h+='<p>'+esc(p)+'</p>';});h+='</div>';}
 if(regras.length){h+='<div class="evsec"><h2>Escolha a sua cor</h2><div class="evrules">';regras.forEach(function(r){h+='<div><i style="background:'+r.c+'"></i><div><b>'+esc(r.k)+'</b>'+esc(r.v)+'</div></div>';});h+='</div></div>';}
 if(+e.preco>0){h+='<div class="evsec"><div class="row between"><h2>Ingressos</h2><span style="font-size:13px;color:#C9D6F5">a partir de '+brl(+e.preco)+'</span></div><div class="evtix"><div class="grow"><b>'+esc(e.lote||'Ingresso')+'</b><span class="sora">'+brl(+e.preco)+'</span></div><button class="cta" style="width:auto;height:48px;padding:0 18px;gap:8px;background:#fff;color:var(--navy);font-size:15px" data-a="ingresso" data-v="'+e.id+'">'+ic('plus',18,2.6)+'Comprar</button></div></div>';}
+var comprei=S.fichas.some(function(f){return f.prod==='ing-'+e.id;});
+if(comprei&&S.user&&S.user.visivel){h+='<div class="row" style="gap:12px"><span style="border:2px solid #fff;border-radius:50%;display:block">'+avatar(40)+'</span><div><b style="display:block;font-size:15px">Últimos compradores</b><span style="font-size:13px;color:#C9D6F5">Você já garantiu o seu ingresso</span></div></div>';}
 if(e.org){h+='<div class="evorg"><span class="sora">'+esc(e.org.charAt(0).toUpperCase())+'</span><div><small>Organizado por</small><b>'+esc(e.org)+'</b></div></div>';}
 var lk='';
 if(e.insta)lk+='<a class="evlink" href="'+esc(/^https?:/.test(e.insta)?e.insta:'https://www.instagram.com/'+e.insta.replace(/^@/,'')+'/')+'" target="_blank" rel="noopener">'+ic('insta',20,2)+'Instagram'+ic('next',16,2.4)+'</a>';
@@ -379,10 +381,20 @@ var m=900,k=Math.min(1,m/im.width),c=document.createElement('canvas');c.width=Ma
 c.getContext('2d').drawImage(im,0,0,c.width,c.height);S.draft=c.toDataURL('image/jpeg',0.82);
 var p=document.getElementById('ee-prev');if(p){p.src=S.draft;p.style.display='block';}};im.src=fr.result;};fr.readAsDataURL(file);
 }
+function avatar(sz){var n=S.user?S.user.nome:'cliente',st='width:'+sz+'px;height:'+sz+'px;border-radius:50%;flex-shrink:0;';
+return S.user&&S.user.foto?'<img src="'+S.user.foto+'" alt="Foto de perfil" style="'+st+'object-fit:cover;display:block">':'<span class="sora" style="'+st+'display:flex;align-items:center;justify-content:center;font-weight:800;font-size:'+Math.round(sz*0.4)+'px;background:var(--navy);color:#fff">'+esc(n.charAt(0).toUpperCase())+'</span>';}
+function lerFoto(file){
+if(!file||!/^image\//.test(file.type)||!S.user)return;
+var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){
+var d=Math.min(im.width,im.height),c=document.createElement('canvas');c.width=c.height=240;
+c.getContext('2d').drawImage(im,(im.width-d)/2,(im.height-d)/2,d,d,0,0,240,240);S.user.foto=c.toDataURL('image/jpeg',0.85);save();render();};im.src=fr.result;};fr.readAsDataURL(file);
+}
 function vPerfil(){
 var d=S.fichas.filter(function(f){return !f.usada;}).length,u=S.fichas.length-d,n=S.user?S.user.nome:'cliente';
 return '<div class="head"><button class="round" aria-label="Voltar ao cardápio" data-a="menu">'+ic('back',20,2.4)+'</button><h1>Meu perfil</h1></div><div class="body">'
-+'<div class="box row" style="gap:14px"><div class="tile sora" style="border-radius:30px;font-weight:800;font-size:24px;background:var(--navy);color:#fff">'+esc(n.charAt(0).toUpperCase())+'</div><div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+'</div></div></div>'
++'<div class="box" style="display:flex;flex-direction:column;gap:14px"><div class="row" style="gap:14px">'+avatar(76)+'<div class="grow"><div class="sora" style="font-weight:700;font-size:20px">'+esc(n)+'</div><div class="sub">'+(S.user&&S.user.admin?'Administrador':'Conta de cliente')+'</div></div></div>'
++'<div class="row" style="gap:10px;flex-wrap:wrap"><label class="pill" for="pf-foto" style="border:1px solid var(--line2);cursor:pointer">'+ic('user',18)+(S.user&&S.user.foto?'Trocar foto':'Escolher foto')+'</label><input id="pf-foto" type="file" accept="image/*" style="position:absolute;width:1px;height:1px;opacity:0">'+(S.user&&S.user.foto?'<button class="linkbtn" data-a="foto-rem">Remover foto</button>':'')+'</div>'
++'<label class="row" for="pf-vis" style="gap:12px;min-height:44px;font-size:14px"><input id="pf-vis" type="checkbox" style="width:22px;height:22px;accent-color:var(--blue);flex-shrink:0"'+(S.user&&S.user.visivel?' checked':'')+'><span>Mostrar minha foto em "Últimos compradores" dos eventos em que comprei ingresso</span></label></div>'
 +'<div class="row" style="gap:12px"><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+d+'</div><div class="sub">fichas disponíveis</div></div><div class="box grow" style="text-align:center"><div class="sora" style="font-weight:800;font-size:26px">'+u+'</div><div class="sub">fichas usadas</div></div></div>'
 +'<button class="prod" data-a="fichas"><span class="tile">'+ic('ticket',26,1.8)+'</span><span class="grow name">Minhas fichas</span>'+ic('next',20,2.4)+'</button>'
 +'<button class="prod" data-a="eventos"><span class="tile">'+ic('cal',26,1.8)+'</span><span class="grow"><span class="name" style="display:block">Evento atual</span><span class="sub">'+esc(ev(S.evento).nome)+'</span></span>'+ic('next',20,2.4)+'</button>'
@@ -463,6 +475,7 @@ else if(a==='eventos')go('eventos');
 else if(a==='perfil')go('perfil');
 else if(a==='evento'){S.evento=v;save();go('menu');}
 else if(a==='ingresso'){var ki='ing-'+v;S.cart[ki]=(S.cart[ki]||0)+1;save();go('pedido');}
+else if(a==='foto-rem'){if(S.user){delete S.user.foto;save();}render();}
 else if(a==='ev-abrir')go('evento',{evSel:v,draft:null});
 else if(a==='ev-editar'){if(isAdmin())go('evedit',{evSel:v,draft:null});}
 else if(a==='ev-reset'){if(isAdmin()){delete S.evEdits[v];save();go('evento',{evSel:v,draft:null});}}
@@ -496,7 +509,7 @@ else if(e.target.id==='f-cpf'){e.target.value=maskCpf(e.target.value);}
 else if(e.target.id==='f-cel'){e.target.value=maskCel(e.target.value);}
 });
 app.addEventListener('submit',function(e){e.preventDefault();if(e.target.id==='authform')autenticar();else if(e.target.id==='evform')salvarEvento();});
-app.addEventListener('change',function(e){if(e.target.name==='pag'){S.pag=e.target.value;render();}else if(e.target.id==='ee-banner'){lerBanner(e.target.files&&e.target.files[0]);}});
+app.addEventListener('change',function(e){if(e.target.name==='pag'){S.pag=e.target.value;render();}else if(e.target.id==='ee-banner'){lerBanner(e.target.files&&e.target.files[0]);}else if(e.target.id==='pf-foto'){lerFoto(e.target.files&&e.target.files[0]);}else if(e.target.id==='pf-vis'){if(S.user){S.user.visivel=e.target.checked;save();}}});
 app.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='cod'){validar(e.target.value);}});
 render();
 })();
