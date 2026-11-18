@@ -804,7 +804,7 @@ else if(a==='proxima'){S.leitura=null;render();if(S.modoCam)abrirCamera();}
 else if(a==='camera'){if(podeBalcao(S.bev))abrirCamera();}
 else if(a==='reset'){S.cart={};S.fichas=[];S.leitura=null;save();render();}
 });
-app.addEventListener('input',function(e){
+app.addEventListener('input',function(e){if(e.target.id&&e.target.id.indexOf('cc-')===0&&S.erroPag){S.erroPag='';var er=document.querySelector('.err');if(er)er.remove();}
 if(e.target.id==='busca'){S.busca=e.target.value;var pos=e.target.selectionStart;render();var n=document.getElementById('busca');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(x){}}}
 else if(e.target.id==='cod'){S.codigo=e.target.value;}
 else if(e.target.id==='buscaev'){S.buscaEv=e.target.value;var p2=e.target.selectionStart;render();var n2=document.getElementById('buscaev');if(n2){n2.focus();try{n2.setSelectionRange(p2,p2);}catch(x){}}}
