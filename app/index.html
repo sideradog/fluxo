@@ -90,6 +90,28 @@ h1,h2,.sora{font-family:Sora,sans-serif}
 .evbadge{position:absolute;right:14px;top:14px;z-index:2;display:inline-flex;align-items:center;gap:7px;background:rgba(5,12,30,.72);color:#fff;border-radius:16px;padding:7px 12px;font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;pointer-events:none}
 .evbadge i{width:9px;height:9px;border-radius:50%;background:#2EE08A}
 .evbtn{position:absolute;z-index:3;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:22px;border:0;background:#fff;color:var(--navy);font-weight:700;font-size:13px}
+.evpage{flex:1;display:flex;flex-direction:column;background:var(--navy);color:#fff}
+.evhero{position:relative;height:250px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.evhero>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.evhero>span.sora{font-weight:800;font-size:110px;letter-spacing:4px}
+.evhero>i{position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(to top,#0A1F4D 4%,rgba(10,31,77,0))}
+.evbody{padding:0 20px 20px;display:flex;flex-direction:column;gap:18px;margin-top:-34px;position:relative;flex:1}
+.evbody h1{margin:0;font-size:34px;line-height:1.05;font-weight:800}
+.evfacts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.evfacts>div{background:#132B63;border:1px solid #2A4384;border-radius:18px;padding:14px;display:flex;gap:10px;align-items:center;font-size:15px;font-weight:600;min-width:0}
+.evfacts span{width:40px;height:40px;border-radius:12px;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.evfacts b{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#C9D6F5}
+.evsec{display:flex;flex-direction:column;gap:10px}
+.evsec h2{margin:0;font-size:18px}
+.evsec p{margin:0;color:#E4EBFB;font-size:16px;line-height:1.5}
+.evrules{display:flex;flex-direction:column;gap:8px}
+.evrules>div{display:flex;align-items:center;gap:14px;background:#132B63;border:1px solid #2A4384;border-radius:16px;padding:12px 14px;font-size:15px;color:#E4EBFB}
+.evrules i{width:26px;height:26px;border-radius:50%;flex-shrink:0;border:2px solid rgba(255,255,255,.35)}
+.evrules b{display:block;color:#fff;font-size:16px}
+.evhow>div{display:flex;align-items:center;gap:12px;color:#E4EBFB;font-size:15px}
+.evhow span{width:30px;height:30px;border-radius:50%;background:#fff;color:var(--navy);font-family:Sora,sans-serif;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.evadmin{border:2px dashed #FFD23F;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.evfoot{background:linear-gradient(to top,#0A1F4D 75%,rgba(10,31,77,0))}
 .evrow{display:flex;align-items:center;gap:16px;padding:14px 0;background:none;border:0;width:100%;text-align:left;color:inherit}
 .evthumb{width:84px;height:84px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;letter-spacing:1px;flex-shrink:0;border:1px solid var(--line)}
 .evchip{background:var(--tint);color:var(--navy);border-radius:10px;padding:4px 10px;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
@@ -122,7 +144,7 @@ food:'<path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M8 7c0-2 2-2 2-4M13 7c0-2 2-2
 back:'<path d="M15 6l-6 6 6 6"/>',next:'<path d="M9 6l6 6-6 6"/>',
 plus:'<path d="M12 5v14M5 12h14"/>',check:'<path d="M5 12l5 5 9-10"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
 ticket:'<path d="M3 9V6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v3a3 3 0 0 0 0 6v3a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-3a3 3 0 0 0 0-6z"/>',
-edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',dots:'<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.600-7 8-7s8 3 8 7"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',list:'<path d="M4 6h16M4 12h16M4 18h16"/>',out:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
+edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>',pin:'<path d="M12 21s7-6.200 7-11a7 7 0 0 0-14 0c0 4.800 7 11 7 11z"/><circle cx="12" cy="10" r="2.500"/>',dots:'<circle cx="12" cy="5" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="19" r="1.6" fill="currentColor"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.600-7 8-7s8 3 8 7"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',list:'<path d="M4 6h16M4 12h16M4 18h16"/>',out:'<path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 8l-4 4 4 4M6 12h10"/>',
 search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.500-3.500"/>',
 scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/>',
 trash:'<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'
@@ -285,12 +307,22 @@ return h+'</div>';
 }
 function vEvento(){
 var e=ev(S.evSel),on=e.id===S.evento;
-return '<div class="head"><button class="round" aria-label="Voltar para eventos" data-a="eventos">'+ic('back',20,2.4)+'</button><h1>Evento</h1></div><div class="body">'
-+(e.banner?'<img src="'+e.banner+'" alt="Banner de '+esc(e.nome)+'" style="width:100%;border-radius:18px;display:block">':'<div class="sora" style="height:150px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:44px;background:'+e.cor+';color:'+e.tx+';border:1px solid var(--line)">'+esc(e.sig)+'</div>')
-+'<h1 style="margin:6px 0 0;font-size:26px">'+esc(e.nome)+'</h1><div class="row" style="gap:8px;color:var(--muted)">'+ic('cal',18)+'<span>'+esc(e.quando)+'</span></div><div class="row" style="gap:6px"><span class="evchip">'+esc(e.onde)+'</span>'+(on?'<span class="evchip" style="background:#DDF3E7;color:var(--ok)">Você está aqui</span>':'')+'</div>'
-+(e.desc?'<div class="box" style="white-space:pre-line;font-size:15px;line-height:1.5">'+esc(e.desc)+'</div>':'')
-+(isAdmin()?'<button class="cta center line" data-a="ev-editar" data-v="'+e.id+'">'+ic('edit',18,2)+'&nbsp; Editar evento</button>':'')
-+'</div><div class="foot"><button class="cta center" data-a="evento" data-v="'+e.id+'">'+(on?'Ver cardápio':'Entrar neste evento')+'</button></div>';
+var CORES={verde:'#2EE08A',amarelo:'#FFD23F',vermelho:'#FF5A5A',azul:'#5B9BFF',branco:'#FFFFFF',rosa:'#FF7EB6',roxo:'#B48CFF',laranja:'#FF9D42',preto:'#111111'};
+var paras=[],regras=[];
+String(e.desc||'').split(/\n/).forEach(function(l){l=l.trim();if(!l)return;var m=l.match(/^([^:]{2,22}):\s*(.+)$/);
+if(m&&CORES[m[1].toLowerCase()])regras.push({k:m[1],v:m[2],c:CORES[m[1].toLowerCase()]});else paras.push(l);});
+var h='<div class="evpage"><div class="evhero" style="background:'+e.cor+'">'
++(e.banner?'<img src="'+e.banner+'" alt="Banner de '+esc(e.nome)+'">':'<span class="sora" style="color:'+e.tx+'" aria-hidden="true">'+esc(e.sig)+'</span>')
++'<i></i><button class="round" aria-label="Voltar para os eventos" data-a="eventos" style="position:absolute;left:16px;top:16px;border:0">'+ic('back',20,2.4)+'</button>'
++(on?'<span class="evbadge"><i></i>Você está aqui</span>':'')+'</div>'
++'<div class="evbody"><h1>'+esc(e.nome)+'</h1>'
++'<div class="evfacts"><div><span>'+ic('cal',20,2)+'</span><div><b>Quando</b>'+esc(e.quando)+'</div></div><div><span>'+ic('pin',20,2)+'</span><div><b>Onde</b>'+esc(e.onde)+'</div></div></div>';
+if(paras.length){h+='<div class="evsec"><h2>Sobre a festa</h2>';paras.forEach(function(p){h+='<p>'+esc(p)+'</p>';});h+='</div>';}
+if(regras.length){h+='<div class="evsec"><h2>Escolha a sua cor</h2><div class="evrules">';regras.forEach(function(r){h+='<div><i style="background:'+r.c+'"></i><div><b>'+esc(r.k)+'</b>'+esc(r.v)+'</div></div>';});h+='</div></div>';}
+h+='<div class="evsec evhow"><h2>Sem fila no bar</h2><div><span>1</span>Entre no evento e escolha no cardápio.</div><div><span>2</span>Pague pelo celular com Pix ou cartão.</div><div><span>3</span>Mostre a ficha no balcão e retire.</div></div>';
+if(isAdmin())h+='<div class="evadmin"><div class="eyebrow" style="color:#FFD23F">Área do administrador</div><div style="font-size:13px;color:#C9D6F5">Só administradores veem este bloco. Clientes não têm acesso à edição.</div><button class="cta center" style="background:#fff;color:var(--navy);height:52px" data-a="ev-editar" data-v="'+e.id+'">'+ic('edit',18,2)+'&nbsp; Editar evento</button></div>';
+h+='</div><div class="foot evfoot"><button class="cta" data-a="evento" data-v="'+e.id+'"><span>'+(on?'Ver cardápio':'Entrar neste evento')+'</span>'+ic('next',20,2.4)+'</button></div></div>';
+return h;
 }
 function vEvEdit(){
 if(!isAdmin())return vEventos();
