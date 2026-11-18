@@ -345,7 +345,7 @@ h+='<label class="lbl">E-mail<input class="inp" id="f-email" type="email" autoco
 if(criar)h+='<label class="lbl">Celular<input class="inp" id="f-cel" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000"></label>';
 h+='<label class="lbl">Senha<input class="inp" id="f-senha" type="password" autocomplete="'+(criar?'new-password':'current-password')+'" placeholder="'+(criar?'Crie uma senha forte':'Sua senha')+'"></label>';
 if(criar)h+=regra+'<label class="lbl">Repita a senha<input class="inp" id="f-senha2" type="password" autocomplete="new-password"></label><div class="sub">Cada CPF pode ter uma única conta, ligada a um único e-mail.</div>';
-h+='<button class="cta center navy" type="submit">'+(criar?'Criar conta':'Entrar')+'</button></form>';
+h+=(criar?'<div class="sub" style="text-align:center">Ao criar a conta, você concorda com os <a href="../termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="../privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</div>':'')+'<button class="cta center navy" type="submit">'+(criar?'Criar conta':'Entrar')+'</button></form>';
 if(!criar)h+='<div style="text-align:center"><button class="linkbtn" data-a="auth" data-v="recuperar">Esqueci minha senha</button></div>';
 h+='<div style="text-align:center;font-size:15px;color:var(--muted)">'+(criar?'Já tem conta?':'Ainda não tem conta?')+' <button class="linkbtn" data-a="auth" data-v="'+(criar?'entrar':'criar')+'">'+(criar?'Entrar':'Criar conta')+'</button></div>';
 }

@@ -46,6 +46,26 @@ Deno.serve(async (req) => {
   try {
     if (!ASAAS_KEY) return resp({ erro: "Chave do Asaas não configurada no Supabase." }, 500);
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // Aviso automático do Asaas (webhook)
+    const whToken = req.headers.get("asaas-access-token");
+    if (whToken !== null) {
+      const esperado = Deno.env.get("ASAAS_WEBHOOK_TOKEN") || "";
+      if (!esperado || whToken !== esperado) return resp({ erro: "Token inválido." }, 401);
+      const ev = await req.json().catch(() => ({}));
+      const payId = ev?.payment?.id;
+      if (payId) {
+        const { data: p } = await admin.from("pedidos").select("id,status").eq("asaas_id", payId).maybeSingle();
+        if (p && p.status === "pendente") {
+          // Confere direto no Asaas antes de liberar, sem confiar só no aviso
+          const pay = await asaas("/payments/" + payId);
+          if (PAGO.includes(pay.status)) await admin.rpc("liberar_pedido", { p_pedido: p.id });
+          else if (FALHOU.includes(pay.status) || pay.deleted) await admin.from("pedidos").update({ status: "falhou" }).eq("id", p.id).eq("status", "pendente");
+        }
+      }
+      return resp({ ok: true });
+    }
+
     const token = (req.headers.get("Authorization") || "").replace("Bearer ", "");
     const { data: ud, error: ue } = await admin.auth.getUser(token);
     if (ue || !ud.user) return resp({ erro: "Entre na sua conta de novo." }, 401);
